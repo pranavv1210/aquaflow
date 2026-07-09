@@ -1,0 +1,12 @@
+export 'customer.dart';
+export 'domain_enums.dart';
+export 'domain_validation_rules.dart';
+export 'driver.dart';
+export 'expense.dart';
+export 'expense_category.dart';
+export 'location.dart';
+export 'order.dart';
+export 'partner_tanker.dart';
+export 'value_objects.dart';
+export 'vehicle.dart';
+export 'water_point.dart';

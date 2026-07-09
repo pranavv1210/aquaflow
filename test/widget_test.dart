@@ -12,6 +12,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 800));
     await tester.pumpAndSettle();
 
-    expect(find.text('Dashboard foundation ready'), findsOneWidget);
+    expect(find.text('Today Orders'), findsOneWidget);
+    expect(find.text('Quick Actions'), findsOneWidget);
   });
 }

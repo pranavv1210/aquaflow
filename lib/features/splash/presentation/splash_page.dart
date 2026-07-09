@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_constants.dart';
@@ -44,16 +45,27 @@ class _SplashPageState extends State<SplashPage> {
               Icons.water_drop_rounded,
               color: Theme.of(context).colorScheme.primary,
               size: 56,
+            ).animate().scale(
+              duration: const Duration(milliseconds: 520),
+              curve: Curves.easeOutCubic,
+              begin: const Offset(0.88, 0.88),
+              end: const Offset(1, 1),
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               AppConstants.appName,
               style: Theme.of(context).textTheme.headlineMedium,
+            ).animate().fadeIn(
+              delay: const Duration(milliseconds: 120),
+              duration: const Duration(milliseconds: 420),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               AppConstants.appHeader,
               style: Theme.of(context).textTheme.bodyMedium,
+            ).animate().fadeIn(
+              delay: const Duration(milliseconds: 220),
+              duration: const Duration(milliseconds: 420),
             ),
           ],
         ),

@@ -45,10 +45,7 @@ class HomeShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedIndex = _destinations.indexWhere(
-      (_NavigationDestinationConfig destination) =>
-          currentPath == destination.route,
-    );
+    final selectedIndex = _selectedIndexForPath(currentPath);
 
     return Scaffold(
       body: SafeArea(child: child),
@@ -69,6 +66,29 @@ class HomeShell extends StatelessWidget {
             .toList(growable: false),
       ),
     );
+  }
+
+  int _selectedIndexForPath(String path) {
+    if (path.startsWith('/orders')) {
+      return 1;
+    }
+    if (path.startsWith('/analytics')) {
+      return 2;
+    }
+    if (path.startsWith('/customers') ||
+        path.startsWith('/drivers') ||
+        path.startsWith('/vehicles') ||
+        path.startsWith('/partners') ||
+        path.startsWith('/payments') ||
+        path.startsWith('/masters')) {
+      return 3;
+    }
+    if (path.startsWith('/settings') ||
+        path.startsWith('/search') ||
+        path.startsWith('/more')) {
+      return 4;
+    }
+    return 0;
   }
 }
 
