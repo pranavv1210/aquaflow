@@ -1,46 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/router/app_routes.dart';
-import '../../../core/shared/widgets/app_screen.dart';
-import '../../../core/shared/widgets/aquaflow_fab.dart';
-import '../../../core/shared/widgets/page_header.dart';
-import '../../../core/shared/widgets/person_card.dart';
-import '../../../core/shared/widgets/search_field.dart';
-import '../../../core/shared/widgets/ui_state_switcher.dart';
+import '../../../core/application/navigation_providers.dart';
+import '../../../core/models/customer.dart';
+import '../../../core/shared/masters/base_master_page.dart';
+import '../application/customer_providers.dart';
+import 'widgets/customer_card.dart';
+import 'widgets/customer_list_skeleton.dart';
 
-class CustomersPage extends StatelessWidget {
+class CustomersPage extends ConsumerWidget {
   const CustomersPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return UiStateSwitcher(
-      state: UiContentState.populated,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final navigation = ref.watch(navigationServiceProvider);
+
+    return BaseMasterPage<Customer>(
+      title: 'Customers',
+      subtitle: 'Customer master',
+      searchLabel: 'Search customers',
       emptyTitle: 'No Customers Yet',
-      emptyMessage: 'Customer master data will appear here.',
+      emptyMessage: 'Add your first customer to reuse them in orders.',
       emptyIcon: Icons.people_outline_rounded,
-      populated: AppScreen(
-        floatingActionButton: AquaFlowFab(
-          tooltip: 'Add customer',
-          onPressed: () => context.go(AppRoutes.customerForm),
-        ),
-        children: <Widget>[
-          const PageHeader(title: 'Customers', subtitle: 'Customer master'),
-          const SearchField(label: 'Search customers'),
-          PersonCard(
-            title: 'Customer --',
-            subtitle: 'Location --',
-            icon: Icons.person_outline_rounded,
-            onTap: () => context.go(AppRoutes.customerProfile),
-          ),
-          PersonCard(
-            title: 'Customer --',
-            subtitle: 'Location --',
-            icon: Icons.person_outline_rounded,
-            onTap: () => context.go(AppRoutes.customerProfile),
-          ),
-        ],
-      ),
+      onAdd: () => navigation.goToCustomerForm(context),
+      loadItems: (WidgetRef ref, String query) {
+        return query.isEmpty
+            ? ref.watch(customerListProvider)
+            : ref.watch(customerSearchProvider(query));
+      },
+      buildLoading: CustomerListSkeleton.new,
+      onRefresh: (WidgetRef ref, String query) async {
+        if (query.isEmpty) {
+          ref.invalidate(customerListProvider);
+        } else {
+          ref.invalidate(customerSearchProvider(query));
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+      },
+      buildItem: (BuildContext context, Customer customer) {
+        return CustomerCard(
+          customer: customer,
+          onTap: () => navigation.goToCustomerProfile(context, customer.id),
+        );
+      },
     );
   }
 }

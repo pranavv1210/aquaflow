@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_config.dart';
+import 'core/application/configuration_providers.dart';
 import 'core/services/app_logger.dart';
 import 'core/services/supabase_service.dart';
 import 'core/shared/widgets/aquaflow_app.dart';
@@ -28,10 +29,15 @@ Future<void> main() async {
         return true;
       };
 
-      final config = AppConfig.fromEnvironment();
+      final config = await AppConfig.load();
       await SupabaseService.initialize(config);
 
-      runApp(const ProviderScope(child: AquaFlowApp()));
+      runApp(
+        ProviderScope(
+          overrides: [appConfigProvider.overrideWithValue(config)],
+          child: const AquaFlowApp(),
+        ),
+      );
     },
     (Object error, StackTrace stackTrace) {
       appLogger.e('Uncaught zone error', error: error, stackTrace: stackTrace);

@@ -19,6 +19,12 @@ create type public.vehicle_status as enum (
   'inactive'
 );
 
+create type public.driver_status as enum (
+  'available',
+  'busy',
+  'inactive'
+);
+
 create type public.vehicle_type as enum (
   'tractor',
   'canter',
@@ -40,6 +46,8 @@ create type public.delivery_type as enum (
   'partner_tanker'
 );
 
+create sequence public.order_number_sequence;
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -47,6 +55,16 @@ as $$
 begin
   new.updated_at = now();
   return new;
+end;
+$$;
+
+create or replace function public.generate_order_number()
+returns text
+language plpgsql
+as $$
+begin
+  return 'AQ-' || to_char(current_date, 'YYYY') || '-' ||
+    lpad(nextval('public.order_number_sequence')::text, 6, '0');
 end;
 $$;
 
@@ -88,7 +106,7 @@ create table public.drivers (
   id uuid primary key default gen_random_uuid(),
   driver_name text not null,
   phone text,
-  status public.vehicle_status not null default 'available',
+  status public.driver_status not null default 'available',
   notes text,
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
@@ -107,8 +125,7 @@ create table public.vehicles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint vehicles_vehicle_name_not_blank check (length(btrim(vehicle_name)) > 0),
-  constraint vehicles_registration_number_not_blank check (length(btrim(registration_number)) > 0),
-  constraint vehicles_registration_number_unique unique (registration_number)
+  constraint vehicles_registration_number_not_blank check (length(btrim(registration_number)) > 0)
 );
 
 create table public.partner_tankers (
@@ -123,8 +140,7 @@ create table public.partner_tankers (
   updated_at timestamptz not null default now(),
   constraint partner_tankers_owner_name_not_blank check (length(btrim(owner_name)) > 0),
   constraint partner_tankers_vehicle_name_not_blank check (length(btrim(vehicle_name)) > 0),
-  constraint partner_tankers_registration_number_not_blank check (length(btrim(registration_number)) > 0),
-  constraint partner_tankers_registration_number_unique unique (registration_number)
+  constraint partner_tankers_registration_number_not_blank check (length(btrim(registration_number)) > 0)
 );
 
 create table public.expense_categories (
@@ -144,15 +160,19 @@ create table public.business_settings (
   setting_key text not null,
   setting_value jsonb not null default '{}'::jsonb,
   description text,
+  singleton_key boolean not null default true,
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint business_settings_key_not_blank check (length(btrim(setting_key)) > 0),
-  constraint business_settings_key_unique unique (setting_key)
+  constraint business_settings_key_unique unique (setting_key),
+  constraint business_settings_singleton_check check (singleton_key),
+  constraint business_settings_singleton_unique unique (singleton_key)
 );
 
 create table public.orders (
   id uuid primary key default gen_random_uuid(),
+  order_number text not null default public.generate_order_number(),
   order_date date not null,
   order_time time not null,
   customer_id uuid not null references public.customers(id) on delete restrict,
@@ -164,14 +184,18 @@ create table public.orders (
   delivery_type public.delivery_type not null,
   load_count integer not null,
   amount numeric(12, 2) not null,
+  paid_amount numeric(12, 2) not null default 0,
   payment_status public.payment_status not null default 'unpaid',
   delivery_status public.delivery_status not null default 'order_received',
   remarks text,
   is_deleted boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  constraint orders_order_number_not_blank check (length(btrim(order_number)) > 0),
+  constraint orders_order_number_unique unique (order_number),
   constraint orders_load_count_minimum check (load_count >= 1),
   constraint orders_amount_positive check (amount > 0),
+  constraint orders_paid_amount_valid check (paid_amount >= 0 and paid_amount <= amount),
   constraint orders_own_vehicle_or_partner_tanker check (
     (
       delivery_type = 'own_vehicle'
@@ -192,7 +216,7 @@ create table public.orders (
 create table public.expenses (
   id uuid primary key default gen_random_uuid(),
   expense_date date not null,
-  vehicle_id uuid not null references public.vehicles(id) on delete restrict,
+  vehicle_id uuid references public.vehicles(id) on delete restrict,
   driver_id uuid references public.drivers(id) on delete set null,
   expense_category_id uuid not null references public.expense_categories(id) on delete restrict,
   amount numeric(12, 2) not null,

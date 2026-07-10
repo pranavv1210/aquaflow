@@ -1,40 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/router/app_routes.dart';
-import '../../../core/shared/widgets/app_screen.dart';
-import '../../../core/shared/widgets/page_header.dart';
-import '../../../core/shared/widgets/search_field.dart';
-import '../../../core/shared/widgets/ui_state_switcher.dart';
-import '../../../core/shared/widgets/vehicle_card.dart';
+import '../../../core/application/navigation_providers.dart';
+import '../../../core/models/vehicle.dart';
+import '../../../core/shared/masters/base_master_page.dart';
+import '../application/vehicle_providers.dart';
+import 'widgets/vehicle_card.dart';
+import 'widgets/vehicle_list_skeleton.dart';
 
-class VehiclesPage extends StatelessWidget {
+class VehiclesPage extends ConsumerWidget {
   const VehiclesPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return UiStateSwitcher(
-      state: UiContentState.populated,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final navigation = ref.watch(navigationServiceProvider);
+
+    return BaseMasterPage<Vehicle>(
+      title: 'Vehicles',
+      subtitle: 'Tanker fleet',
+      searchLabel: 'Search vehicles',
       emptyTitle: 'No Vehicles Yet',
+      emptyMessage: 'Add your first vehicle to manage your fleet.',
       emptyIcon: Icons.local_shipping_outlined,
-      populated: AppScreen(
-        children: <Widget>[
-          const PageHeader(title: 'Vehicles', subtitle: 'Tanker fleet'),
-          const SearchField(label: 'Search vehicles'),
-          VehicleCard(
-            title: 'Vehicle --',
-            subtitle: 'Driver --',
-            status: '--',
-            onTap: () => context.go(AppRoutes.vehicleDetails),
-          ),
-          VehicleCard(
-            title: 'Vehicle --',
-            subtitle: 'Driver --',
-            status: '--',
-            onTap: () => context.go(AppRoutes.vehicleDetails),
-          ),
-        ],
-      ),
+      onAdd: () => navigation.goToVehicleForm(context),
+      loadItems: (WidgetRef ref, String query) {
+        return query.isEmpty
+            ? ref.watch(vehicleListProvider)
+            : ref.watch(vehicleSearchProvider(query));
+      },
+      buildLoading: VehicleListSkeleton.new,
+      onRefresh: (WidgetRef ref, String query) async {
+        if (query.isEmpty) {
+          ref.invalidate(vehicleListProvider);
+        } else {
+          ref.invalidate(vehicleSearchProvider(query));
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+      },
+      buildItem: (BuildContext context, Vehicle vehicle) {
+        return VehicleCard(
+          vehicle: vehicle,
+          onTap: () => navigation.goToVehicleDetails(context, vehicle.id),
+        );
+      },
     );
   }
 }

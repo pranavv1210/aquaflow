@@ -10,7 +10,7 @@ class SupabaseService {
     if (!config.hasSupabaseCredentials) {
       appLogger.w(
         'Supabase credentials are not configured. '
-        'Pass SUPABASE_URL and SUPABASE_ANON_KEY with --dart-define.',
+        'Add SUPABASE_URL and SUPABASE_ANON_KEY to .env.',
       );
       return;
     }

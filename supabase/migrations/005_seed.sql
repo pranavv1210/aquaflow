@@ -13,3 +13,30 @@ set
   description = excluded.description,
   is_active = true,
   updated_at = now();
+
+insert into public.business_settings (
+  setting_key,
+  setting_value,
+  description,
+  is_active
+)
+values (
+  'business_profile',
+  jsonb_build_object(
+    'business_name', 'AquaFlow',
+    'currency', 'INR',
+    'date_format', 'dd MMM yyyy',
+    'time_format', '12 Hour',
+    'owner_name', '',
+    'owner_phone', '',
+    'owner_address', ''
+  ),
+  'Primary business settings for the single-owner AquaFlow app.',
+  true
+)
+on conflict (setting_key) do update
+set
+  setting_value = excluded.setting_value,
+  description = excluded.description,
+  is_active = true,
+  updated_at = now();

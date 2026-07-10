@@ -102,6 +102,10 @@ with check (true);
 
 grant usage on schema public to anon, authenticated;
 
+grant usage, select on sequence public.order_number_sequence to anon, authenticated;
+
+grant execute on function public.generate_order_number() to anon, authenticated;
+
 grant select, insert, update, delete on
   public.locations,
   public.water_points,

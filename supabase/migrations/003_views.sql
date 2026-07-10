@@ -29,17 +29,20 @@ cross join public.todays_expenses e;
 create view public.pending_payments as
 select
   o.id as order_id,
+  o.order_number,
   o.order_date,
   o.customer_id,
   c.display_name as customer_name,
   o.amount,
+  o.paid_amount,
+  (o.amount - o.paid_amount)::numeric(12, 2) as pending_amount,
   o.payment_status,
   o.delivery_status,
   o.load_count
 from public.orders o
 join public.customers c on c.id = o.customer_id
 where o.is_deleted = false
-  and o.payment_status in ('unpaid', 'partial');
+  and (o.amount - o.paid_amount) > 0;
 
 create view public.monthly_revenue as
 select
@@ -88,7 +91,7 @@ select
   c.phone,
   count(o.id)::integer as total_orders,
   coalesce(sum(o.amount) filter (where o.delivery_status = 'delivered'), 0)::numeric(12, 2) as total_revenue,
-  coalesce(sum(o.amount) filter (where o.payment_status in ('unpaid', 'partial')), 0)::numeric(12, 2) as pending_amount,
+  coalesce(sum(o.amount - o.paid_amount) filter (where (o.amount - o.paid_amount) > 0), 0)::numeric(12, 2) as pending_amount,
   max(o.order_date) as last_order_date
 from public.customers c
 left join public.orders o

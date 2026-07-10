@@ -9,3 +9,11 @@ final connectivityProvider = StreamProvider<List<ConnectivityResult>>((ref) {
 final internetStatusProvider = StreamProvider<InternetStatus>((ref) {
   return InternetConnection().onStatusChange;
 });
+
+final isOnlineProvider = Provider<bool>((ref) {
+  final status = ref.watch(internetStatusProvider);
+  return status.maybeWhen(
+    data: (InternetStatus value) => value == InternetStatus.connected,
+    orElse: () => true,
+  );
+});

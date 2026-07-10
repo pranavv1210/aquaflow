@@ -5,22 +5,36 @@ import '../../features/analytics/presentation/analytics_page.dart';
 import '../../features/customers/presentation/customer_form_page.dart';
 import '../../features/customers/presentation/customer_profile_page.dart';
 import '../../features/customers/presentation/customers_page.dart';
+import '../../features/drivers/presentation/driver_form_page.dart';
 import '../../features/drivers/presentation/driver_profile_page.dart';
 import '../../features/drivers/presentation/drivers_page.dart';
+import '../../features/expense_categories/presentation/expense_category_form_page.dart';
+import '../../features/expense_categories/presentation/expense_category_profile_page.dart';
+import '../../features/expense_categories/presentation/expense_categories_page.dart';
 import '../../features/home/presentation/global_search_page.dart';
 import '../../features/home/presentation/home_shell.dart';
 import '../../features/home/presentation/home_page.dart';
+import '../../features/locations/presentation/location_form_page.dart';
+import '../../features/locations/presentation/location_profile_page.dart';
+import '../../features/locations/presentation/locations_page.dart';
 import '../../features/masters/presentation/masters_page.dart';
 import '../../features/more/presentation/more_page.dart';
 import '../../features/orders/new_order_page.dart';
 import '../../features/orders/order_details_page.dart';
 import '../../features/orders/orders_page.dart';
+import '../../features/partner_tankers/presentation/partner_tanker_form_page.dart';
+import '../../features/partner_tankers/presentation/partner_tanker_profile_page.dart';
+import '../../features/partner_tankers/presentation/partner_tankers_page.dart';
 import '../../features/partners/presentation/partners_page.dart';
 import '../../features/payments/presentation/pending_payments_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
 import '../../features/splash/presentation/splash_page.dart';
 import '../../features/vehicles/presentation/vehicle_details_page.dart';
+import '../../features/vehicles/presentation/vehicle_form_page.dart';
 import '../../features/vehicles/presentation/vehicles_page.dart';
+import '../../features/water_points/presentation/water_point_form_page.dart';
+import '../../features/water_points/presentation/water_point_profile_page.dart';
+import '../../features/water_points/presentation/water_points_page.dart';
 import 'app_routes.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -80,10 +94,12 @@ final GoRouter appRouter = GoRouter(
                   const CustomersPage(),
         ),
         GoRoute(
-          path: AppRoutes.customerProfile,
-          builder:
-              (BuildContext context, GoRouterState state) =>
-                  const CustomerProfilePage(),
+          path: '${AppRoutes.customerProfile}/:customerId',
+          builder: (BuildContext context, GoRouterState state) {
+            return CustomerProfilePage(
+              customerId: state.pathParameters['customerId']!,
+            );
+          },
         ),
         GoRoute(
           path: AppRoutes.customerForm,
@@ -92,16 +108,40 @@ final GoRouter appRouter = GoRouter(
                   const CustomerFormPage(),
         ),
         GoRoute(
+          path: '${AppRoutes.customerForm}/:customerId',
+          builder: (BuildContext context, GoRouterState state) {
+            return CustomerFormPage(
+              customerId: state.pathParameters['customerId'],
+            );
+          },
+        ),
+        GoRoute(
           path: AppRoutes.drivers,
           builder:
               (BuildContext context, GoRouterState state) =>
                   const DriversPage(),
         ),
         GoRoute(
-          path: AppRoutes.driverProfile,
+          path: '${AppRoutes.driverProfile}/:driverId',
+          builder: (BuildContext context, GoRouterState state) {
+            return DriverProfilePage(
+              driverId: state.pathParameters['driverId']!,
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.driverForm,
           builder:
               (BuildContext context, GoRouterState state) =>
-                  const DriverProfilePage(),
+                  const DriverFormPage(),
+        ),
+        GoRoute(
+          path: '${AppRoutes.driverForm}/:driverId',
+          builder: (BuildContext context, GoRouterState state) {
+            return DriverFormPage(
+              driverId: state.pathParameters['driverId'],
+            );
+          },
         ),
         GoRoute(
           path: AppRoutes.vehicles,
@@ -110,10 +150,140 @@ final GoRouter appRouter = GoRouter(
                   const VehiclesPage(),
         ),
         GoRoute(
-          path: AppRoutes.vehicleDetails,
+          path: '${AppRoutes.vehicleDetails}/:vehicleId',
+          builder: (BuildContext context, GoRouterState state) {
+            return VehicleDetailsPage(
+              vehicleId: state.pathParameters['vehicleId']!,
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.vehicleForm,
           builder:
               (BuildContext context, GoRouterState state) =>
-                  const VehicleDetailsPage(),
+                  const VehicleFormPage(),
+        ),
+        GoRoute(
+          path: '${AppRoutes.vehicleForm}/:vehicleId',
+          builder: (BuildContext context, GoRouterState state) {
+            return VehicleFormPage(
+              vehicleId: state.pathParameters['vehicleId'],
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.locations,
+          builder:
+              (BuildContext context, GoRouterState state) =>
+                  const LocationsPage(),
+        ),
+        GoRoute(
+          path: '${AppRoutes.locationProfile}/:locationId',
+          builder: (BuildContext context, GoRouterState state) {
+            return LocationProfilePage(
+              locationId: state.pathParameters['locationId']!,
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.locationForm,
+          builder:
+              (BuildContext context, GoRouterState state) =>
+                  const LocationFormPage(),
+        ),
+        GoRoute(
+          path: '${AppRoutes.locationForm}/:locationId',
+          builder: (BuildContext context, GoRouterState state) {
+            return LocationFormPage(
+              locationId: state.pathParameters['locationId'],
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.waterPoints,
+          builder:
+              (BuildContext context, GoRouterState state) =>
+                  const WaterPointsPage(),
+        ),
+        GoRoute(
+          path: '${AppRoutes.waterPointProfile}/:waterPointId',
+          builder: (BuildContext context, GoRouterState state) {
+            return WaterPointProfilePage(
+              waterPointId: state.pathParameters['waterPointId']!,
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.waterPointForm,
+          builder:
+              (BuildContext context, GoRouterState state) =>
+                  const WaterPointFormPage(),
+        ),
+        GoRoute(
+          path: '${AppRoutes.waterPointForm}/:waterPointId',
+          builder: (BuildContext context, GoRouterState state) {
+            return WaterPointFormPage(
+              waterPointId: state.pathParameters['waterPointId'],
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.partnerTankers,
+          builder:
+              (BuildContext context, GoRouterState state) =>
+                  const PartnerTankersPage(),
+        ),
+        GoRoute(
+          path: '${AppRoutes.partnerTankerProfile}/:partnerTankerId',
+          builder: (BuildContext context, GoRouterState state) {
+            return PartnerTankerProfilePage(
+              partnerTankerId: state.pathParameters['partnerTankerId']!,
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.partnerTankerForm,
+          builder:
+              (BuildContext context, GoRouterState state) =>
+                  const PartnerTankerFormPage(),
+        ),
+        GoRoute(
+          path: '${AppRoutes.partnerTankerForm}/:partnerTankerId',
+          builder: (BuildContext context, GoRouterState state) {
+            return PartnerTankerFormPage(
+              partnerTankerId: state.pathParameters['partnerTankerId'],
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.expenseCategories,
+          builder:
+              (BuildContext context, GoRouterState state) =>
+                  const ExpenseCategoriesPage(),
+        ),
+        GoRoute(
+          path: '${AppRoutes.expenseCategoryProfile}/:expenseCategoryId',
+          builder: (BuildContext context, GoRouterState state) {
+            return ExpenseCategoryProfilePage(
+              expenseCategoryId:
+                  state.pathParameters['expenseCategoryId']!,
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.expenseCategoryForm,
+          builder:
+              (BuildContext context, GoRouterState state) =>
+                  const ExpenseCategoryFormPage(),
+        ),
+        GoRoute(
+          path: '${AppRoutes.expenseCategoryForm}/:expenseCategoryId',
+          builder: (BuildContext context, GoRouterState state) {
+            return ExpenseCategoryFormPage(
+              expenseCategoryId:
+                  state.pathParameters['expenseCategoryId'],
+            );
+          },
         ),
         GoRoute(
           path: AppRoutes.partners,
