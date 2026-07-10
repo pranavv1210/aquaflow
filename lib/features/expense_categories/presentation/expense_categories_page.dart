@@ -13,15 +13,32 @@ class ExpenseCategoriesPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final nav = ref.watch(navigationServiceProvider);
     return BaseMasterPage<ExpenseCategory>(
-      title: 'Expense Categories', subtitle: 'Expense classification',
-      searchLabel: 'Search categories', emptyTitle: 'No Categories Yet',
+      title: 'Expense Categories',
+      subtitle: 'Expense classification',
+      searchLabel: 'Search categories',
+      emptyTitle: 'No Categories Yet',
       emptyMessage: 'Add your first expense category to classify expenses.',
       emptyIcon: Icons.category_outlined,
       onAdd: () => nav.goToExpenseCategoryForm(context),
-      loadItems: (ref, q) => q.isEmpty ? ref.watch(expenseCategoryListProvider) : ref.watch(expenseCategorySearchProvider(q)),
+      loadItems:
+          (ref, q) =>
+              q.isEmpty
+                  ? ref.watch(expenseCategoryListProvider)
+                  : ref.watch(expenseCategorySearchProvider(q)),
       buildLoading: ExpenseCategoryListSkeleton.new,
-      onRefresh: (ref, q) async { if (q.isEmpty) ref.invalidate(expenseCategoryListProvider); else ref.invalidate(expenseCategorySearchProvider(q)); await Future.delayed(const Duration(milliseconds: 250)); },
-      buildItem: (ctx, ec) => ExpenseCategoryCard(expenseCategory: ec, onTap: () => nav.goToExpenseCategoryProfile(context, ec.id)),
+      onRefresh: (ref, q) async {
+        if (q.isEmpty) {
+          ref.invalidate(expenseCategoryListProvider);
+        } else {
+          ref.invalidate(expenseCategorySearchProvider(q));
+        }
+        await Future.delayed(const Duration(milliseconds: 250));
+      },
+      buildItem:
+          (ctx, ec) => ExpenseCategoryCard(
+            expenseCategory: ec,
+            onTap: () => nav.goToExpenseCategoryProfile(context, ec.id),
+          ),
     );
   }
 }

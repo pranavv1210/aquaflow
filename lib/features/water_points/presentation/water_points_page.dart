@@ -13,15 +13,32 @@ class WaterPointsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final nav = ref.watch(navigationServiceProvider);
     return BaseMasterPage<WaterPoint>(
-      title: 'Water Points', subtitle: 'Water filling points',
-      searchLabel: 'Search water points', emptyTitle: 'No Water Points Yet',
+      title: 'Water Points',
+      subtitle: 'Water filling points',
+      searchLabel: 'Search water points',
+      emptyTitle: 'No Water Points Yet',
       emptyMessage: 'Add your first water point to manage supplies.',
       emptyIcon: Icons.water_drop_outlined,
       onAdd: () => nav.goToWaterPointForm(context),
-      loadItems: (ref, q) => q.isEmpty ? ref.watch(waterPointListProvider) : ref.watch(waterPointSearchProvider(q)),
+      loadItems:
+          (ref, q) =>
+              q.isEmpty
+                  ? ref.watch(waterPointListProvider)
+                  : ref.watch(waterPointSearchProvider(q)),
       buildLoading: WaterPointListSkeleton.new,
-      onRefresh: (ref, q) async { if (q.isEmpty) ref.invalidate(waterPointListProvider); else ref.invalidate(waterPointSearchProvider(q)); await Future.delayed(const Duration(milliseconds: 250)); },
-      buildItem: (ctx, wp) => WaterPointCard(waterPoint: wp, onTap: () => nav.goToWaterPointProfile(context, wp.id)),
+      onRefresh: (ref, q) async {
+        if (q.isEmpty) {
+          ref.invalidate(waterPointListProvider);
+        } else {
+          ref.invalidate(waterPointSearchProvider(q));
+        }
+        await Future.delayed(const Duration(milliseconds: 250));
+      },
+      buildItem:
+          (ctx, wp) => WaterPointCard(
+            waterPoint: wp,
+            onTap: () => nav.goToWaterPointProfile(context, wp.id),
+          ),
     );
   }
 }

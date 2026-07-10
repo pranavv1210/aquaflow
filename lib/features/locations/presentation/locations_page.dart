@@ -20,14 +20,25 @@ class LocationsPage extends ConsumerWidget {
       emptyMessage: 'Add your first location to organize your routes.',
       emptyIcon: Icons.location_on_outlined,
       onAdd: () => navigation.goToLocationForm(context),
-      loadItems: (ref, query) => query.isEmpty ? ref.watch(locationListProvider) : ref.watch(locationSearchProvider(query)),
+      loadItems:
+          (ref, query) =>
+              query.isEmpty
+                  ? ref.watch(locationListProvider)
+                  : ref.watch(locationSearchProvider(query)),
       buildLoading: LocationListSkeleton.new,
       onRefresh: (ref, query) async {
-        if (query.isEmpty) ref.invalidate(locationListProvider);
-        else ref.invalidate(locationSearchProvider(query));
+        if (query.isEmpty) {
+          ref.invalidate(locationListProvider);
+        } else {
+          ref.invalidate(locationSearchProvider(query));
+        }
         await Future.delayed(const Duration(milliseconds: 250));
       },
-      buildItem: (context, Location loc) => LocationCard(location: loc, onTap: () => navigation.goToLocationProfile(context, loc.id)),
+      buildItem:
+          (context, Location loc) => LocationCard(
+            location: loc,
+            onTap: () => navigation.goToLocationProfile(context, loc.id),
+          ),
     );
   }
 }

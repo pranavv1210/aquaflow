@@ -13,15 +13,33 @@ class PartnerTankersPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final nav = ref.watch(navigationServiceProvider);
     return BaseMasterPage<PartnerTanker>(
-      title: 'Partner Tankers', subtitle: 'External partner vehicles',
-      searchLabel: 'Search partner tankers', emptyTitle: 'No Partner Tankers Yet',
-      emptyMessage: 'Add your first partner tanker to manage external deliveries.',
+      title: 'Partner Tankers',
+      subtitle: 'External partner vehicles',
+      searchLabel: 'Search partner tankers',
+      emptyTitle: 'No Partner Tankers Yet',
+      emptyMessage:
+          'Add your first partner tanker to manage external deliveries.',
       emptyIcon: Icons.handshake_outlined,
       onAdd: () => nav.goToPartnerTankerForm(context),
-      loadItems: (ref, q) => q.isEmpty ? ref.watch(partnerTankerListProvider) : ref.watch(partnerTankerSearchProvider(q)),
+      loadItems:
+          (ref, q) =>
+              q.isEmpty
+                  ? ref.watch(partnerTankerListProvider)
+                  : ref.watch(partnerTankerSearchProvider(q)),
       buildLoading: PartnerTankerListSkeleton.new,
-      onRefresh: (ref, q) async { if (q.isEmpty) ref.invalidate(partnerTankerListProvider); else ref.invalidate(partnerTankerSearchProvider(q)); await Future.delayed(const Duration(milliseconds: 250)); },
-      buildItem: (ctx, pt) => PartnerTankerCard(partnerTanker: pt, onTap: () => nav.goToPartnerTankerProfile(context, pt.id)),
+      onRefresh: (ref, q) async {
+        if (q.isEmpty) {
+          ref.invalidate(partnerTankerListProvider);
+        } else {
+          ref.invalidate(partnerTankerSearchProvider(q));
+        }
+        await Future.delayed(const Duration(milliseconds: 250));
+      },
+      buildItem:
+          (ctx, pt) => PartnerTankerCard(
+            partnerTanker: pt,
+            onTap: () => nav.goToPartnerTankerProfile(context, pt.id),
+          ),
     );
   }
 }
