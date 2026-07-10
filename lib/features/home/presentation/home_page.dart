@@ -1,131 +1,249 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../../core/helpers/app_formatters.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/shared/widgets/action_tile.dart';
 import '../../../core/shared/widgets/app_screen.dart';
 import '../../../core/shared/widgets/dashboard_card.dart';
+import '../../../core/shared/widgets/empty_state_widget.dart';
+import '../../../core/shared/widgets/error_state_widget.dart';
 import '../../../core/shared/widgets/glass_card.dart';
 import '../../../core/shared/widgets/order_card.dart';
 import '../../../core/shared/widgets/page_header.dart';
 import '../../../core/shared/widgets/section_title.dart';
+import '../../../core/shared/widgets/skeleton_loader.dart';
 import '../../../core/shared/widgets/status_chip.dart';
-import '../../../core/shared/widgets/ui_state_switcher.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../analytics/application/analytics_providers.dart';
+import '../../analytics/application/business_metrics.dart';
+import '../../expenses/application/expense_providers.dart';
+import '../../orders/application/order_providers.dart';
+import '../../orders/domain/order_record.dart';
+import '../../vehicles/application/vehicle_providers.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return UiStateSwitcher(
-      state: UiContentState.populated,
-      emptyTitle: 'No Dashboard Data',
-      emptyMessage: 'Dashboard metrics will appear after orders are added.',
-      populated: AppScreen(
-        children: <Widget>[
-          PageHeader(
-            title: AppConstants.appHeader,
-            subtitle: 'Today at a glance',
-            trailing: IconButton.filledTonal(
-              onPressed: () => context.go(AppRoutes.globalSearch),
-              icon: const Icon(Icons.search_rounded),
-            ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    _listenForRealtime(ref);
+    final metrics = ref.watch(dashboardMetricsProvider);
+    return metrics.when(
+      loading:
+          () => const AppScreen(
+            children: <Widget>[
+              PageHeader(title: AppConstants.appHeader, subtitle: 'Loading...'),
+              SkeletonLoader(height: 220),
+              SkeletonLoader(height: 180),
+              SkeletonLoader(height: 140),
+            ],
           ),
-          LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              final isWide = constraints.maxWidth > 560;
-              return GridView.count(
-                crossAxisCount: isWide ? 4 : 2,
-                crossAxisSpacing: AppSpacing.md,
-                mainAxisSpacing: AppSpacing.md,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                childAspectRatio: isWide ? 1.35 : 1,
-                children: const <Widget>[
-                  DashboardCard(
-                    title: 'Today Orders',
-                    value: '--',
-                    subtitle: 'No data',
-                    icon: Icons.water_drop_outlined,
+      error:
+          (Object error, StackTrace stackTrace) => AppScreen(
+            children: <Widget>[
+              PageHeader(
+                title: AppConstants.appHeader,
+                subtitle: 'Today at a glance',
+                trailing: IconButton.filledTonal(
+                  onPressed: () => context.go(AppRoutes.globalSearch),
+                  icon: const Icon(Icons.search_rounded),
+                ),
+              ),
+              ErrorStateWidget(
+                title: 'Unable to load dashboard',
+                message: error.toString(),
+                onRetry: () => ref.invalidate(dashboardMetricsProvider),
+              ),
+            ],
+          ),
+      data: (DashboardMetrics data) {
+        return AppScreen(
+          children: <Widget>[
+            PageHeader(
+              title: AppConstants.appHeader,
+              subtitle: 'Today at a glance',
+              trailing: IconButton.filledTonal(
+                onPressed: () => context.go(AppRoutes.globalSearch),
+                icon: const Icon(Icons.search_rounded),
+              ),
+            ),
+            _DashboardGrid(metrics: data),
+            const SectionTitle(title: 'Quick Actions'),
+            GlassCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: <Widget>[
+                  ActionTile(
+                    title: 'New Order',
+                    subtitle: 'Create a tanker delivery entry',
+                    icon: Icons.add_circle_outline_rounded,
+                    onTap: () => context.go(AppRoutes.newOrder),
                   ),
-                  DashboardCard(
-                    title: 'Revenue',
-                    value: '₹--',
-                    subtitle: 'No data',
-                    icon: Icons.currency_rupee_rounded,
+                  ActionTile(
+                    title: 'New Expense',
+                    subtitle: 'Record vehicle or business spending',
+                    icon: Icons.receipt_long_outlined,
+                    onTap: () => context.go(AppRoutes.expenseForm),
                   ),
-                  DashboardCard(
-                    title: 'Pending',
-                    value: '₹--',
-                    subtitle: 'No data',
-                    icon: Icons.pending_actions_rounded,
+                  ActionTile(
+                    title: 'Customers',
+                    subtitle: 'Open customer master',
+                    icon: Icons.people_outline_rounded,
+                    onTap: () => context.go(AppRoutes.customers),
                   ),
-                  DashboardCard(
-                    title: 'Loads',
-                    value: '--',
-                    subtitle: 'No data',
-                    icon: Icons.local_shipping_outlined,
+                  ActionTile(
+                    title: 'Pending Payments',
+                    subtitle: 'Review open payment items',
+                    icon: Icons.account_balance_wallet_outlined,
+                    onTap: () => context.go(AppRoutes.pendingPayments),
                   ),
                 ],
-              );
-            },
-          ),
-          const SectionTitle(title: 'Quick Actions'),
-          GlassCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: <Widget>[
-                ActionTile(
-                  title: 'New Order',
-                  subtitle: 'Create a tanker delivery entry',
-                  icon: Icons.add_circle_outline_rounded,
-                  onTap: () => context.go(AppRoutes.newOrder),
-                ),
-                ActionTile(
-                  title: 'Pending Payments',
-                  subtitle: 'Review open payment items',
-                  icon: Icons.account_balance_wallet_outlined,
-                  onTap: () => context.go(AppRoutes.pendingPayments),
-                ),
-                ActionTile(
-                  title: 'Masters',
-                  subtitle: 'Customers, vehicles, drivers, partners',
-                  icon: Icons.storage_outlined,
-                  onTap: () => context.go(AppRoutes.masters),
-                ),
-              ],
+              ),
             ),
-          ),
-          const SectionTitle(title: 'Recent Orders'),
-          OrderCard(onTap: () => context.go(AppRoutes.orderDetails)),
-          const SectionTitle(title: 'Vehicle Status'),
-          GlassCard(
-            child: Column(
-              children: <Widget>[
-                _VehicleStatusRow(
-                  label: 'Available',
-                  value: '--',
-                  color: Theme.of(context).colorScheme.primary,
+            const SectionTitle(title: 'Recent Orders'),
+            if (data.recentOrders.isEmpty)
+              const EmptyStateWidget(
+                title: 'No Orders Yet',
+                message: 'Recent orders will appear here.',
+                icon: Icons.receipt_long_outlined,
+              )
+            else
+              ...data.recentOrders.map(
+                (OrderRecord order) => OrderCard(
+                  orderNumber: order.orderNumber,
+                  customerName: order.customerName,
+                  locationName: order.locationName,
+                  vehicleName: order.vehicleName,
+                  driverName: order.driverName,
+                  amount: AppFormatters.currency(order.amount),
+                  pendingAmount: AppFormatters.currency(order.pendingAmount),
+                  loadCount: order.loadCount.toString(),
+                  paymentStatus: _statusLabel(order.paymentStatus),
+                  deliveryStatus: _statusLabel(order.deliveryStatus),
+                  date: AppFormatters.date(order.orderDate),
+                  onTap: () => context.go(AppRoutes.orderDetailsPath(order.id)),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                _VehicleStatusRow(
-                  label: 'On Trip',
-                  value: '--',
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _VehicleStatusRow(
-                  label: 'Maintenance',
-                  value: '--',
-                  color: Theme.of(context).colorScheme.error,
-                ),
-              ],
+              ),
+            const SectionTitle(title: 'Vehicle Status'),
+            GlassCard(
+              child: Column(
+                children: <Widget>[
+                  _VehicleStatusRow(
+                    label: 'Available',
+                    value: data.availableVehicles.toString(),
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _VehicleStatusRow(
+                    label: 'Busy',
+                    value: data.busyVehicles.toString(),
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _listenForRealtime(WidgetRef ref) {
+    ref.listen(orderRealtimeProvider, (_, next) {
+      if (next.hasValue) {
+        ref.invalidate(orderListProvider);
+        invalidateBusinessMetrics(ref);
+      }
+    });
+    ref.listen(expenseRealtimeProvider, (_, next) {
+      if (next.hasValue) {
+        ref.invalidate(expenseListProvider);
+        invalidateBusinessMetrics(ref);
+      }
+    });
+    ref.listen(vehicleRealtimeProvider, (_, next) {
+      if (next.hasValue) {
+        ref.invalidate(vehicleListProvider);
+        invalidateBusinessMetrics(ref);
+      }
+    });
+  }
+
+  String _statusLabel(String value) {
+    return value
+        .split('_')
+        .where((String part) => part.isNotEmpty)
+        .map((String part) => part[0].toUpperCase() + part.substring(1))
+        .join(' ');
+  }
+}
+
+class _DashboardGrid extends StatelessWidget {
+  const _DashboardGrid({required this.metrics});
+
+  final DashboardMetrics metrics;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final isWide = constraints.maxWidth > 560;
+        return GridView.count(
+          crossAxisCount: isWide ? 4 : 2,
+          crossAxisSpacing: AppSpacing.md,
+          mainAxisSpacing: AppSpacing.md,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: isWide ? 1.35 : 1,
+          children: <Widget>[
+            DashboardCard(
+              title: "Today's Revenue",
+              value: AppFormatters.currency(metrics.todayRevenue),
+              subtitle: 'Delivered orders',
+              icon: Icons.currency_rupee_rounded,
+            ),
+            DashboardCard(
+              title: "Today's Expenses",
+              value: AppFormatters.currency(metrics.todayExpenses),
+              subtitle: 'Expense date today',
+              icon: Icons.receipt_long_outlined,
+            ),
+            DashboardCard(
+              title: "Today's Profit",
+              value: AppFormatters.currency(metrics.todayProfit),
+              subtitle: 'Revenue - expenses',
+              icon: Icons.trending_up_rounded,
+            ),
+            DashboardCard(
+              title: 'Pending Payments',
+              value: AppFormatters.currency(metrics.pendingPayments),
+              subtitle: 'Amount due',
+              icon: Icons.pending_actions_rounded,
+            ),
+            DashboardCard(
+              title: 'Today Orders',
+              value: metrics.ordersToday.toString(),
+              subtitle: 'Orders entered today',
+              icon: Icons.water_drop_outlined,
+            ),
+            DashboardCard(
+              title: 'Available Vehicles',
+              value: metrics.availableVehicles.toString(),
+              subtitle: 'Ready for delivery',
+              icon: Icons.local_shipping_outlined,
+            ),
+            DashboardCard(
+              title: 'Busy Vehicles',
+              value: metrics.busyVehicles.toString(),
+              subtitle: 'Currently busy',
+              icon: Icons.route_outlined,
+            ),
+          ],
+        );
+      },
     );
   }
 }
