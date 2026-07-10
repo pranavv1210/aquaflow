@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -65,35 +67,54 @@ class _HomeShellState extends State<HomeShell> {
         _handleBack(context);
       },
       child: Scaffold(
+        extendBody: true,
         body: SafeArea(child: widget.child),
-        bottomNavigationBar: DecoratedBox(
-          decoration: BoxDecoration(
-            boxShadow: <BoxShadow>[
-              BoxShadow(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.08),
-                blurRadius: 24,
-                offset: const Offset(0, -8),
+        bottomNavigationBar: SafeArea(
+          minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withValues(alpha: 0.72),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.56),
+                  ),
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.14),
+                      blurRadius: 28,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: NavigationBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  selectedIndex: selectedIndex < 0 ? 0 : selectedIndex,
+                  onDestinationSelected: (int index) {
+                    HapticFeedback.selectionClick();
+                    context.go(_destinations[index].route);
+                  },
+                  destinations: _destinations
+                      .map(
+                        (_NavigationDestinationConfig destination) =>
+                            NavigationDestination(
+                              icon: Icon(destination.icon),
+                              selectedIcon: Icon(destination.selectedIcon),
+                              label: destination.label,
+                            ),
+                      )
+                      .toList(growable: false),
+                ),
               ),
-            ],
-          ),
-          child: NavigationBar(
-            selectedIndex: selectedIndex < 0 ? 0 : selectedIndex,
-            onDestinationSelected: (int index) {
-              HapticFeedback.selectionClick();
-              context.go(_destinations[index].route);
-            },
-            destinations: _destinations
-                .map(
-                  (_NavigationDestinationConfig destination) =>
-                      NavigationDestination(
-                        icon: Icon(destination.icon),
-                        selectedIcon: Icon(destination.selectedIcon),
-                        label: destination.label,
-                      ),
-                )
-                .toList(growable: false),
+            ),
           ),
         ),
       ),

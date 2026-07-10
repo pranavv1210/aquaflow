@@ -31,9 +31,18 @@ class GlassCard extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: AppGlass.blur, sigmaY: AppGlass.blur),
         child: DecoratedBox(
-          decoration: AppGlass.decoration(
-            radius: radius,
-          ).copyWith(boxShadow: AppElevation.soft),
+          decoration: AppGlass.decoration(radius: radius).copyWith(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[
+                Colors.white.withValues(alpha: 0.90),
+                Colors.white.withValues(alpha: 0.62),
+                Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+              ],
+            ),
+            boxShadow: AppElevation.soft,
+          ),
           child: Padding(padding: padding, child: child),
         ),
       ),

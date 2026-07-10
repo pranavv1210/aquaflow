@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 
 class AppScreen extends StatelessWidget {
@@ -41,13 +42,56 @@ class AppScreen extends StatelessWidget {
       ),
     );
 
+    final decorated = DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[
+            AppColors.veryLightBlue,
+            Colors.white,
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+          ],
+        ),
+      ),
+      child: Stack(
+        children: <Widget>[
+          Positioned(
+            top: -96,
+            right: -72,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.12),
+              ),
+              child: const SizedBox.square(dimension: 220),
+            ),
+          ),
+          Positioned(
+            bottom: 120,
+            left: -96,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.brightCyan.withValues(alpha: 0.10),
+              ),
+              child: const SizedBox.square(dimension: 240),
+            ),
+          ),
+          content,
+        ],
+      ),
+    );
+
     if (floatingActionButton == null) {
-      return content;
+      return decorated;
     }
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: content,
+      body: decorated,
       floatingActionButton: floatingActionButton,
     );
   }

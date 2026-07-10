@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import '../errors/app_failure.dart';
 import '../errors/exception_mapper.dart';
 import '../result/result.dart';
 import '../services/app_logger.dart';
@@ -22,9 +25,15 @@ abstract class BaseRepository {
   }) async {
     try {
       _logger.debug(operationName);
-      final value =
-          retry ? await _retryStrategy.run<T>(operation) : await operation();
+      final future = retry ? _retryStrategy.run<T>(operation) : operation();
+      final value = await future.timeout(const Duration(seconds: 15));
       return Success<T>(value);
+    } on TimeoutException {
+      const failure = NetworkFailure(
+        message: 'Connection timed out. Please try again.',
+      );
+      _logger.warning('$operationName timed out');
+      return Failure<T>(failure);
     } catch (error, stackTrace) {
       final failure = ExceptionMapper.toFailure(
         error,

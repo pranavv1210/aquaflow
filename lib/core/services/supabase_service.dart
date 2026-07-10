@@ -48,7 +48,11 @@ class SupabaseService {
     }
 
     try {
-      await client.from('business_settings').select('id').limit(1);
+      await client
+          .from('business_settings')
+          .select('id')
+          .limit(1)
+          .timeout(const Duration(seconds: 8));
       return const Success<void>(null);
     } catch (error, stackTrace) {
       appLog.error(

@@ -51,7 +51,10 @@ Future<AppConnectionState> _resolveConnectionState() async {
     return AppConnectionState.offline;
   }
 
-  final hasInternet = await InternetConnection().hasInternetAccess;
+  final hasInternet = await InternetConnection().hasInternetAccess.timeout(
+    const Duration(seconds: 4),
+    onTimeout: () => false,
+  );
   if (!hasInternet) {
     return AppConnectionState.offline;
   }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/app_constants.dart';
 import '../../../core/helpers/app_formatters.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/shared/widgets/action_tile.dart';
@@ -33,9 +32,9 @@ class HomePage extends ConsumerWidget {
     final metrics = ref.watch(dashboardMetricsProvider);
     return metrics.when(
       loading:
-          () => const AppScreen(
+          () => AppScreen(
             children: <Widget>[
-              PageHeader(title: AppConstants.appHeader, subtitle: 'Loading...'),
+              PageHeader(title: _greeting(), subtitle: "Today's Business"),
               SkeletonLoader(height: 220),
               SkeletonLoader(height: 180),
               SkeletonLoader(height: 140),
@@ -45,8 +44,8 @@ class HomePage extends ConsumerWidget {
           (Object error, StackTrace stackTrace) => AppScreen(
             children: <Widget>[
               PageHeader(
-                title: AppConstants.appHeader,
-                subtitle: 'Today at a glance',
+                title: _greeting(),
+                subtitle: "Today's Business",
                 trailing: IconButton.filledTonal(
                   onPressed: () => context.go(AppRoutes.globalSearch),
                   icon: const Icon(Icons.search_rounded),
@@ -63,8 +62,8 @@ class HomePage extends ConsumerWidget {
         return AppScreen(
           children: <Widget>[
             PageHeader(
-              title: AppConstants.appHeader,
-              subtitle: 'Today at a glance',
+              title: _greeting(),
+              subtitle: "Today's Business",
               trailing: IconButton.filledTonal(
                 onPressed: () => context.go(AppRoutes.globalSearch),
                 icon: const Icon(Icons.search_rounded),
@@ -178,6 +177,20 @@ class HomePage extends ConsumerWidget {
         .where((String part) => part.isNotEmpty)
         .map((String part) => part[0].toUpperCase() + part.substring(1))
         .join(' ');
+  }
+
+  String _greeting() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) {
+      return 'Good Morning, Harish 👋';
+    }
+    if (hour >= 12 && hour < 17) {
+      return 'Good Afternoon, Harish ☀️';
+    }
+    if (hour >= 17 && hour < 21) {
+      return 'Good Evening, Harish 🌇';
+    }
+    return 'Good Night, Harish 🌙';
   }
 }
 
