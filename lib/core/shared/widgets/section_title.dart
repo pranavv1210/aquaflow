@@ -26,3 +26,15 @@ class SectionTitle extends StatelessWidget {
     );
   }
 }
+
+class SectionHeader extends StatelessWidget {
+  const SectionHeader({required this.title, super.key, this.action});
+
+  final String title;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    return SectionTitle(title: title, action: action);
+  }
+}

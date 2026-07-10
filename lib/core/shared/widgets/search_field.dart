@@ -25,3 +25,25 @@ class SearchField extends StatelessWidget {
     );
   }
 }
+
+class PremiumSearchBar extends StatelessWidget {
+  const PremiumSearchBar({
+    required this.label,
+    super.key,
+    this.controller,
+    this.onChanged,
+  });
+
+  final String label;
+  final TextEditingController? controller;
+  final ValueChanged<String>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SearchField(
+      label: label,
+      controller: controller,
+      onChanged: onChanged,
+    );
+  }
+}

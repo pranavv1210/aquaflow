@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_glass.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
+import 'app_buttons.dart';
 
 class ConfirmationDialog extends StatelessWidget {
   const ConfirmationDialog({
@@ -68,23 +69,20 @@ class ConfirmationDialog extends StatelessWidget {
                   Row(
                     children: <Widget>[
                       Expanded(
-                        child: OutlinedButton(
+                        child: SecondaryButton(
+                          label: cancelLabel,
                           onPressed: () => Navigator.of(context).pop(false),
-                          child: Text(cancelLabel),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
-                        child: FilledButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          style:
+                        child: PrimaryButton(
+                          label: confirmLabel,
+                          icon:
                               isDestructive
-                                  ? FilledButton.styleFrom(
-                                    backgroundColor:
-                                        Theme.of(context).colorScheme.error,
-                                  )
-                                  : null,
-                          child: Text(confirmLabel),
+                                  ? Icons.delete_outline_rounded
+                                  : Icons.check_rounded,
+                          onPressed: () => Navigator.of(context).pop(true),
                         ),
                       ),
                     ],

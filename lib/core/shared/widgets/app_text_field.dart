@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_design_tokens.dart';
+import '../../theme/app_radius.dart';
+
 class AppTextField extends StatelessWidget {
   const AppTextField({
     required this.label,
@@ -42,7 +45,24 @@ class AppTextField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         hintText: hintText,
-        prefixIcon: prefixIcon == null ? null : Icon(prefixIcon),
+        contentPadding: AppPadding.field,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide(
+            color: Theme.of(
+              context,
+            ).colorScheme.outline.withValues(alpha: 0.28),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+        ),
+        prefixIcon:
+            prefixIcon == null ? null : Icon(prefixIcon, size: AppIconSizes.md),
       ),
     );
   }

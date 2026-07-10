@@ -13,6 +13,7 @@ import '../../../core/shared/widgets/empty_state_widget.dart';
 import '../../../core/shared/widgets/error_state_widget.dart';
 import '../../../core/shared/widgets/glass_card.dart';
 import '../../../core/shared/widgets/page_header.dart';
+import '../../../core/shared/widgets/premium_bottom_sheet.dart';
 import '../../../core/shared/widgets/search_field.dart';
 import '../../../core/shared/widgets/skeleton_loader.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -143,10 +144,8 @@ class _PendingPaymentsPageState extends ConsumerState<PendingPaymentsPage> {
   }
 
   Future<void> _showMarkPaidSheet(OrderRecord order) async {
-    await showModalBottomSheet<void>(
+    await PremiumBottomSheet.show<void>(
       context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
       builder: (BuildContext context) {
         return _MarkPaidSheet(order: order);
       },

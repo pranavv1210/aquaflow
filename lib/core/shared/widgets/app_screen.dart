@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../theme/app_colors.dart';
+import '../../theme/app_design_tokens.dart';
 import '../../theme/app_spacing.dart';
 
 class AppScreen extends StatelessWidget {
@@ -56,17 +56,7 @@ class AppScreen extends StatelessWidget {
 
     final decorated = SizedBox.expand(
       child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: <Color>[
-              AppColors.veryLightBlue,
-              Colors.white,
-              Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-            ],
-          ),
-        ),
+        decoration: const BoxDecoration(gradient: AppGradients.screen),
         child: Stack(
           fit: StackFit.expand,
           children: <Widget>[
@@ -89,7 +79,9 @@ class AppScreen extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.brightCyan.withValues(alpha: 0.10),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.tertiary.withValues(alpha: 0.10),
                 ),
                 child: const SizedBox.square(dimension: 240),
               ),

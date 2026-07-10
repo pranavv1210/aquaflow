@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../theme/app_design_tokens.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 
@@ -76,6 +77,53 @@ class SecondaryButton extends StatelessWidget {
         ),
       ),
       child: _ButtonContent(label: label, icon: icon),
+    );
+  }
+}
+
+class GlassButton extends StatelessWidget {
+  const GlassButton({
+    required this.label,
+    required this.onPressed,
+    super.key,
+    this.icon,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return SecondaryButton(label: label, onPressed: onPressed, icon: icon);
+  }
+}
+
+class GlassIconButton extends StatelessWidget {
+  const GlassIconButton({
+    required this.icon,
+    required this.onPressed,
+    super.key,
+    this.tooltip,
+  });
+
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final String? tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton.filledTonal(
+      tooltip: tooltip,
+      onPressed:
+          onPressed == null
+              ? null
+              : () {
+                HapticFeedback.selectionClick();
+                onPressed?.call();
+              },
+      iconSize: AppIconSizes.md,
+      icon: Icon(icon),
     );
   }
 }

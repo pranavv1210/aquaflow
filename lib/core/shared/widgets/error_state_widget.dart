@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_spacing.dart';
 import 'app_buttons.dart';
+import 'glass_card.dart';
 
 class ErrorStateWidget extends StatelessWidget {
   const ErrorStateWidget({
@@ -18,7 +19,7 @@ class ErrorStateWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: GlassCard(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,

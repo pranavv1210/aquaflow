@@ -11,6 +11,7 @@ import '../../core/shared/widgets/empty_state_widget.dart';
 import '../../core/shared/widgets/error_state_widget.dart';
 import '../../core/shared/widgets/order_card.dart';
 import '../../core/shared/widgets/page_header.dart';
+import '../../core/shared/widgets/premium_bottom_sheet.dart';
 import '../../core/shared/widgets/search_field.dart';
 import '../../core/shared/widgets/skeleton_loader.dart';
 import '../../core/shared/widgets/timed_loading_view.dart';
@@ -221,22 +222,33 @@ class _OrdersPageState extends ConsumerState<OrdersPage> {
   }
 
   void _showFilterSheet(BuildContext context) {
-    showModalBottomSheet<void>(
+    PremiumBottomSheet.show<void>(
       context: context,
-      showDragHandle: true,
       builder: (BuildContext context) {
-        return const Padding(
-          padding: EdgeInsets.all(AppSpacing.md),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.md),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              ListTile(
-                leading: Icon(Icons.filter_list_rounded),
-                title: Text('Filter Orders'),
-                subtitle: Text('Use the chips on the Orders screen.'),
+              Text(
+                'Filter Orders',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-              AquaFilterChipBar(
-                labels: <String>['All', 'Unpaid', 'Delivered', 'Paid'],
+              const SizedBox(height: AppSpacing.md),
+              Wrap(
+                spacing: AppSpacing.xs,
+                runSpacing: AppSpacing.xs,
+                children: <Widget>[
+                  for (var index = 0; index < _filters.length; index++)
+                    AquaFilterChip(
+                      label: _filters[index],
+                      selected: index == _selectedFilter,
+                      onSelected: (_) {
+                        setState(() => _selectedFilter = index);
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                ],
               ),
             ],
           ),

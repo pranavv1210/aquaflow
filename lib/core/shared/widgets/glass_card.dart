@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/app_elevation.dart';
+import '../../theme/app_design_tokens.dart';
 import '../../theme/app_glass.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
@@ -32,15 +33,7 @@ class GlassCard extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: AppGlass.blur, sigmaY: AppGlass.blur),
         child: DecoratedBox(
           decoration: AppGlass.decoration(radius: radius).copyWith(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: <Color>[
-                Colors.white.withValues(alpha: 0.90),
-                Colors.white.withValues(alpha: 0.62),
-                Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
-              ],
-            ),
+            gradient: AppGradients.glass(Theme.of(context).colorScheme.primary),
             boxShadow: AppElevation.soft,
           ),
           child: Padding(padding: padding, child: child),
