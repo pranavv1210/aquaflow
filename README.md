@@ -1,21 +1,32 @@
 # AquaFlow
 
-Production-grade Android application foundation for a water tanker business.
+Production-grade Android application for a water tanker business.
 
-## Phase 0 Scope
+## Features (v1.0.0)
 
-- Feature-first Flutter architecture
-- Riverpod application providers
-- GoRouter navigation shell
-- Supabase initialization through Dart environment defines
-- Material 3 design system with reusable tokens and widgets
-- Placeholder pages only; no CRUD, database tables, analytics, or business logic
+- **Feature-first Flutter architecture**: Clean separation of modules (Customers, Drivers, Vehicles, Locations, Water Points, Orders, Expenses).
+- **Comprehensive CRUD Operations**: Create, Read, Update, and (Soft) Delete for all core business entities.
+- **Realtime Supabase Integration**: Instant synchronization of data across devices.
+- **Dynamic Dashboards**: Real-time business metrics including Today's Revenue, Expenses, Profit, and Pending Payments.
+- **In-Depth Analytics**: Visual charts for revenue trends, expense breakdowns, vehicle/driver performance, and customer value.
+- **Payment Tracking**: Granular tracking for partial payments, fully paid orders, and pending balances.
+- **State Management & Navigation**: Robust architecture using Riverpod and GoRouter.
+- **Material 3 Design**: Premium, highly responsive, and animated user interface built with reusable tokens and glassmorphism elements.
+- **Historical Data Import**: Python-based tool (`tools/import_excel.py`) for seamlessly migrating legacy Excel records into the Supabase backend.
 
 ## Running Locally
+
+To run the application locally, ensure you provide the required Supabase environment variables:
 
 ```powershell
 flutter pub get
 flutter run --dart-define=SUPABASE_URL=your-url --dart-define=SUPABASE_ANON_KEY=your-key
 ```
 
-The app can run without Supabase defines during foundation development. In that case Supabase initialization is skipped and a warning is logged.
+## Release Build
+
+To build the production APK with tree-shaking and optimizations:
+
+```powershell
+flutter build apk --release
+```
