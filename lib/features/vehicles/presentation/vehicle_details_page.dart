@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/application/navigation_providers.dart';
 import '../../../core/helpers/app_formatters.dart';
+import '../../../core/models/domain_enums.dart';
 import '../../../core/models/vehicle.dart';
 import '../../../core/shared/masters/master_dialogs.dart';
 import '../../../core/shared/widgets/app_buttons.dart';
 import '../../../core/shared/widgets/app_screen.dart';
+import '../../../core/shared/widgets/dashboard_card.dart';
 import '../../../core/shared/widgets/empty_state_widget.dart';
 import '../../../core/shared/widgets/error_state_widget.dart';
 import '../../../core/shared/widgets/glass_card.dart';
@@ -25,12 +27,13 @@ class VehicleDetailsPage extends ConsumerWidget {
     final vehicle = ref.watch(selectedVehicleProvider(vehicleId));
 
     return vehicle.when(
-      loading: () => const AppScreen(
-        children: <Widget>[
-          PageHeader(title: 'Vehicle Details', subtitle: 'Loading...'),
-          VehicleListSkeleton(),
-        ],
-      ),
+      loading:
+          () => const AppScreen(
+            children: <Widget>[
+              PageHeader(title: 'Vehicle Details', subtitle: 'Loading...'),
+              VehicleListSkeleton(),
+            ],
+          ),
       error: (Object error, StackTrace stackTrace) {
         return AppScreen(
           children: <Widget>[
@@ -60,26 +63,86 @@ class _VehicleDetailsContent extends ConsumerWidget {
           title: vehicle.vehicleName,
           subtitle: 'Vehicle Details',
           trailing: IconButton.filledTonal(
-            onPressed: () => ref.read(navigationServiceProvider).goToEditVehicle(context, vehicle.id),
+            onPressed:
+                () => ref
+                    .read(navigationServiceProvider)
+                    .goToEditVehicle(context, vehicle.id),
             icon: const Icon(Icons.edit_outlined),
           ),
         ),
         GlassCard(
           child: Column(
             children: <Widget>[
-              _DetailRow(label: 'Registration', value: vehicle.registrationNumber),
+              _DetailRow(
+                label: 'Registration',
+                value: vehicle.registrationNumber,
+              ),
               const SizedBox(height: AppSpacing.sm),
-              _DetailRow(label: 'Type', value: vehicle.vehicleType.name),
+              _DetailRow(
+                label: 'Type',
+                value: _vehicleTypeLabel(vehicle.vehicleType),
+              ),
               const SizedBox(height: AppSpacing.sm),
-              _DetailRow(label: 'Status', value: vehicle.status.name),
+              _DetailRow(label: 'Status', value: _statusLabel(vehicle.status)),
               const SizedBox(height: AppSpacing.sm),
               _DetailRow(label: 'Notes', value: vehicle.notes ?? 'Not set'),
               const SizedBox(height: AppSpacing.sm),
-              _DetailRow(label: 'Created', value: AppFormatters.date(vehicle.createdAt)),
+              _DetailRow(
+                label: 'Created',
+                value: AppFormatters.date(vehicle.createdAt),
+              ),
               const SizedBox(height: AppSpacing.sm),
-              _DetailRow(label: 'Updated', value: AppFormatters.date(vehicle.updatedAt)),
+              _DetailRow(
+                label: 'Updated',
+                value: AppFormatters.date(vehicle.updatedAt),
+              ),
             ],
           ),
+        ),
+        LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final isWide = constraints.maxWidth > 560;
+            return GridView.count(
+              crossAxisCount: isWide ? 2 : 1,
+              crossAxisSpacing: AppSpacing.md,
+              mainAxisSpacing: AppSpacing.md,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              childAspectRatio: isWide ? 1.9 : 2.8,
+              children: <Widget>[
+                DashboardCard(
+                  title: 'Current Status',
+                  value: _statusLabel(vehicle.status),
+                  icon: Icons.local_shipping_outlined,
+                ),
+                const DashboardCard(
+                  title: 'Assigned Driver',
+                  value: '--',
+                  icon: Icons.badge_outlined,
+                ),
+                const DashboardCard(
+                  title: 'Trips Completed',
+                  value: '--',
+                  icon: Icons.route_outlined,
+                ),
+                const DashboardCard(
+                  title: 'Revenue Generated',
+                  value: '₹--',
+                  icon: Icons.currency_rupee_rounded,
+                ),
+                const DashboardCard(
+                  title: 'Expenses',
+                  value: '₹--',
+                  icon: Icons.receipt_long_outlined,
+                ),
+                const DashboardCard(
+                  title: 'Net Profit',
+                  value: '₹--',
+                  icon: Icons.trending_up_rounded,
+                ),
+              ],
+            );
+          },
         ),
         const SectionTitle(title: 'Recent Orders'),
         const EmptyStateWidget(
@@ -102,7 +165,9 @@ class _VehicleDetailsContent extends ConsumerWidget {
       title: 'Delete Vehicle?',
       message: 'This will deactivate the vehicle without removing history.',
     );
-    if (!confirmed || !context.mounted) return;
+    if (!confirmed || !context.mounted) {
+      return;
+    }
     final result = await ref.read(deleteVehicleUseCaseProvider)(vehicle.id);
     result.when(
       success: (_) {
@@ -114,9 +179,27 @@ class _VehicleDetailsContent extends ConsumerWidget {
         }
       },
       failure: (error) {
-        if (context.mounted) MasterDialogs.showError(context, error.message);
+        if (context.mounted) {
+          MasterDialogs.showError(context, error.message);
+        }
       },
     );
+  }
+
+  String _vehicleTypeLabel(VehicleType type) {
+    return switch (type) {
+      VehicleType.tractor => 'Tractor',
+      VehicleType.canter => 'Canter',
+      VehicleType.partner => 'Partner',
+    };
+  }
+
+  String _statusLabel(VehicleStatus status) {
+    return switch (status) {
+      VehicleStatus.available => 'Available',
+      VehicleStatus.busy => 'Busy',
+      VehicleStatus.inactive => 'Inactive',
+    };
   }
 }
 
@@ -133,7 +216,11 @@ class _DetailRow extends StatelessWidget {
         Expanded(child: Text(label)),
         const SizedBox(width: AppSpacing.md),
         Expanded(
-          child: Text(value, textAlign: TextAlign.end, style: Theme.of(context).textTheme.titleMedium),
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
         ),
       ],
     );

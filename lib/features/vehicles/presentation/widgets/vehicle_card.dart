@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/models/domain_enums.dart';
 import '../../../../core/models/vehicle.dart';
 import '../../../../core/shared/widgets/person_card.dart';
 
@@ -22,9 +23,25 @@ class VehicleCard extends StatelessWidget {
   String get _subtitle {
     final parts = <String>[
       vehicle.registrationNumber,
-      vehicle.vehicleType.name,
-      vehicle.status.name,
+      _vehicleTypeLabel(vehicle.vehicleType),
+      _statusLabel(vehicle.status),
     ];
     return parts.join(' \u00b7 ');
+  }
+
+  String _vehicleTypeLabel(VehicleType type) {
+    return switch (type) {
+      VehicleType.tractor => 'Tractor',
+      VehicleType.canter => 'Canter',
+      VehicleType.partner => 'Partner',
+    };
+  }
+
+  String _statusLabel(VehicleStatus status) {
+    return switch (status) {
+      VehicleStatus.available => 'Available',
+      VehicleStatus.busy => 'Busy',
+      VehicleStatus.inactive => 'Inactive',
+    };
   }
 }

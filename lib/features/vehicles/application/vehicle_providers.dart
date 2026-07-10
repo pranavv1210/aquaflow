@@ -15,7 +15,9 @@ final vehicleRepositoryProvider = Provider<VehicleRepository>((ref) {
   return SupabaseVehicleRepository(client);
 });
 
-final vehicleValidationServiceProvider = Provider<VehicleValidationService>((ref) {
+final vehicleValidationServiceProvider = Provider<VehicleValidationService>((
+  ref,
+) {
   return const VehicleValidationService();
 });
 
@@ -71,6 +73,13 @@ final selectedVehicleProvider =
       load: (GetVehicleUseCase useCase, String vehicleId) => useCase(vehicleId),
     );
 
+final vehicleRealtimeProvider =
+    StreamProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
+      return ref
+          .watch(realtimeServiceProvider)
+          .tableStream(table: 'vehicles', primaryKey: <String>['id']);
+    });
+
 Future<void> refreshVehicleProviders(WidgetRef ref) async {
   await ref.read(refreshVehiclesUseCaseProvider)();
   ref.invalidate(vehicleListProvider);
@@ -83,11 +92,12 @@ Future<void> saveVehicleProviders(
   required void Function(Vehicle vehicle) onSuccess,
   required void Function(String message) onFailure,
 }) async {
-  final result = vehicleId == null
-      ? await ref.read(createVehicleUseCaseProvider)(input)
-      : await ref.read(updateVehicleUseCaseProvider)(
-          UpdateParams<VehicleInput>(id: vehicleId, input: input),
-        );
+  final result =
+      vehicleId == null
+          ? await ref.read(createVehicleUseCaseProvider)(input)
+          : await ref.read(updateVehicleUseCaseProvider)(
+            UpdateParams<VehicleInput>(id: vehicleId, input: input),
+          );
   result.when(
     success: (Vehicle vehicle) {
       ref.invalidate(vehicleListProvider);

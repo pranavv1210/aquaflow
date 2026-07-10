@@ -46,16 +46,23 @@ class _VehicleFormPageState extends ConsumerState<VehicleFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isEditing) return _buildForm();
+    if (!_isEditing && _statusController.text.isEmpty) {
+      _statusController.text = 'available';
+    }
+
+    if (!_isEditing) {
+      return _buildForm();
+    }
 
     final vehicle = ref.watch(selectedVehicleProvider(widget.vehicleId!));
     return vehicle.when(
-      loading: () => const AppScreen(
-        children: <Widget>[
-          PageHeader(title: 'Edit Vehicle', subtitle: 'Loading...'),
-          VehicleListSkeleton(),
-        ],
-      ),
+      loading:
+          () => const AppScreen(
+            children: <Widget>[
+              PageHeader(title: 'Edit Vehicle', subtitle: 'Loading...'),
+              VehicleListSkeleton(),
+            ],
+          ),
       error: (Object error, StackTrace stackTrace) {
         return AppScreen(
           children: <Widget>[
@@ -63,7 +70,10 @@ class _VehicleFormPageState extends ConsumerState<VehicleFormPage> {
             ErrorStateWidget(
               title: 'Unable to load vehicle',
               message: error.toString(),
-              onRetry: () => ref.invalidate(selectedVehicleProvider(widget.vehicleId!)),
+              onRetry:
+                  () => ref.invalidate(
+                    selectedVehicleProvider(widget.vehicleId!),
+                  ),
             ),
           ],
         );
@@ -99,7 +109,9 @@ class _VehicleFormPageState extends ConsumerState<VehicleFormPage> {
   Future<void> _confirmCancel() async {
     if (_hasChanges) {
       final discard = await MasterDialogs.confirmDiscard(context);
-      if (!discard) return;
+      if (!discard) {
+        return;
+      }
     }
     _leaveForm();
   }
@@ -112,7 +124,9 @@ class _VehicleFormPageState extends ConsumerState<VehicleFormPage> {
       _notesController.text.trim().isNotEmpty;
 
   void _populateOnce(Vehicle vehicle) {
-    if (_didPopulate) return;
+    if (_didPopulate) {
+      return;
+    }
     _nameController.text = vehicle.vehicleName;
     _registrationController.text = vehicle.registrationNumber;
     _vehicleTypeController.text = vehicle.vehicleType.name;
@@ -122,7 +136,9 @@ class _VehicleFormPageState extends ConsumerState<VehicleFormPage> {
   }
 
   Future<void> _save() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
     setState(() => _isSaving = true);
     final input = VehicleInput(
       vehicleName: _nameController.text,
@@ -137,22 +153,34 @@ class _VehicleFormPageState extends ConsumerState<VehicleFormPage> {
       vehicleId: widget.vehicleId,
       input: input,
       onSuccess: (Vehicle saved) {
-        if (!mounted) return;
-        MasterDialogs.showSaved(context, _isEditing ? 'Vehicle updated' : 'Vehicle added');
+        if (!mounted) {
+          return;
+        }
+        MasterDialogs.showSaved(
+          context,
+          _isEditing ? 'Vehicle updated' : 'Vehicle added',
+        );
         _leaveForm(savedVehicleId: saved.id);
       },
       onFailure: (String message) {
-        if (mounted) MasterDialogs.showError(context, message);
+        if (mounted) {
+          MasterDialogs.showError(context, message);
+        }
       },
     );
 
-    if (mounted) setState(() => _isSaving = false);
+    if (mounted) {
+      setState(() => _isSaving = false);
+    }
   }
 
   void _leaveForm({String? savedVehicleId}) {
     final navigation = ref.read(navigationServiceProvider);
     if (_isEditing) {
-      navigation.goToVehicleDetails(context, savedVehicleId ?? widget.vehicleId!);
+      navigation.goToVehicleDetails(
+        context,
+        savedVehicleId ?? widget.vehicleId!,
+      );
       return;
     }
     navigation.goToVehicles(context);

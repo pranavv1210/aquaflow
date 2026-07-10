@@ -14,6 +14,14 @@ class VehiclesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigation = ref.watch(navigationServiceProvider);
+    ref.listen(vehicleRealtimeProvider, (
+      _,
+      AsyncValue<List<Map<String, dynamic>>> next,
+    ) {
+      if (next.hasValue) {
+        ref.invalidate(vehicleListProvider);
+      }
+    });
 
     return BaseMasterPage<Vehicle>(
       title: 'Vehicles',
