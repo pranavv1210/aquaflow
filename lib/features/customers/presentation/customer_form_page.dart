@@ -141,6 +141,7 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
     final input = CustomerInput(
       displayName: _nameController.text,
       phone: _phoneController.text,
+      defaultLocationId: _locationController.text,
       address: _addressController.text,
       notes: _notesController.text,
     );

@@ -87,6 +87,13 @@ final customersByLocationProvider = FutureProvider.autoDispose
       return result.getOrThrow();
     });
 
+final customerRealtimeProvider =
+    StreamProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
+      return ref
+          .watch(realtimeServiceProvider)
+          .tableStream(table: 'customers', primaryKey: <String>['id']);
+    });
+
 Future<void> refreshCustomerProviders(WidgetRef ref) async {
   await ref.read(refreshCustomersUseCaseProvider)();
   ref.invalidate(customerListProvider);

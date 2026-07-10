@@ -46,6 +46,14 @@ final class PermissionFailure extends AppFailure {
   });
 }
 
+final class AuthenticationFailure extends AppFailure {
+  const AuthenticationFailure({
+    super.message = 'Authentication failed. Please try again.',
+    super.code,
+    super.technicalMessage,
+  });
+}
+
 final class UnknownFailure extends AppFailure {
   const UnknownFailure({
     super.message = 'Something went wrong. Please try again.',

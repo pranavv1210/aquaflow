@@ -31,6 +31,7 @@ Future<void> main() async {
 
       final config = await AppConfig.load();
       await SupabaseService.initialize(config);
+      SupabaseService.instance.initializeRealtime();
 
       runApp(
         ProviderScope(

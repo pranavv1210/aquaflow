@@ -14,6 +14,14 @@ class CustomersPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigation = ref.watch(navigationServiceProvider);
+    ref.listen(customerRealtimeProvider, (
+      _,
+      AsyncValue<List<Map<String, dynamic>>> next,
+    ) {
+      if (next.hasValue) {
+        ref.invalidate(customerListProvider);
+      }
+    });
 
     return BaseMasterPage<Customer>(
       title: 'Customers',

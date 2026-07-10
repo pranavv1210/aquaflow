@@ -25,6 +25,13 @@ class ExceptionMapper {
         technicalMessage: error.message,
       );
     }
+    if (error is AuthException) {
+      return AuthenticationFailure(
+        message: error.message,
+        code: error.statusCode,
+        technicalMessage: error.toString(),
+      );
+    }
     return UnknownFailure(
       message: fallbackMessage,
       technicalMessage: error.toString(),
