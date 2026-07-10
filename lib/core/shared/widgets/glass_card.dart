@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../theme/app_elevation.dart';
 import '../../theme/app_glass.dart';
@@ -47,7 +48,13 @@ class GlassCard extends StatelessWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(radius),
-                  onTap: onTap,
+                  onTap:
+                      onTap == null
+                          ? null
+                          : () {
+                            HapticFeedback.selectionClick();
+                            onTap?.call();
+                          },
                   child: card,
                 ),
               ),

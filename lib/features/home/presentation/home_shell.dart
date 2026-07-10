@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
+import '../../../core/services/snackbar_service.dart';
 
-class HomeShell extends StatelessWidget {
+class HomeShell extends StatefulWidget {
   const HomeShell({required this.currentPath, required this.child, super.key});
 
   final String currentPath;
   final Widget child;
+
+  @override
+  State<HomeShell> createState() => _HomeShellState();
+}
+
+class _HomeShellState extends State<HomeShell> {
+  DateTime? _lastBackPress;
 
   static const List<_NavigationDestinationConfig> _destinations =
       <_NavigationDestinationConfig>[
@@ -45,27 +54,75 @@ class HomeShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedIndex = _selectedIndexForPath(currentPath);
+    final selectedIndex = _selectedIndexForPath(widget.currentPath);
 
-    return Scaffold(
-      body: SafeArea(child: child),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex < 0 ? 0 : selectedIndex,
-        onDestinationSelected: (int index) {
-          context.go(_destinations[index].route);
-        },
-        destinations: _destinations
-            .map(
-              (_NavigationDestinationConfig destination) =>
-                  NavigationDestination(
-                    icon: Icon(destination.icon),
-                    selectedIcon: Icon(destination.selectedIcon),
-                    label: destination.label,
-                  ),
-            )
-            .toList(growable: false),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (didPop) {
+          return;
+        }
+        _handleBack(context);
+      },
+      child: Scaffold(
+        body: SafeArea(child: widget.child),
+        bottomNavigationBar: DecoratedBox(
+          decoration: BoxDecoration(
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.08),
+                blurRadius: 24,
+                offset: const Offset(0, -8),
+              ),
+            ],
+          ),
+          child: NavigationBar(
+            selectedIndex: selectedIndex < 0 ? 0 : selectedIndex,
+            onDestinationSelected: (int index) {
+              HapticFeedback.selectionClick();
+              context.go(_destinations[index].route);
+            },
+            destinations: _destinations
+                .map(
+                  (_NavigationDestinationConfig destination) =>
+                      NavigationDestination(
+                        icon: Icon(destination.icon),
+                        selectedIcon: Icon(destination.selectedIcon),
+                        label: destination.label,
+                      ),
+                )
+                .toList(growable: false),
+          ),
+        ),
       ),
     );
+  }
+
+  void _handleBack(BuildContext context) {
+    final router = GoRouter.of(context);
+    if (router.canPop()) {
+      router.pop();
+      return;
+    }
+
+    if (widget.currentPath != AppRoutes.home) {
+      context.go(_fallbackBackPath(widget.currentPath));
+      return;
+    }
+
+    final now = DateTime.now();
+    final shouldExit =
+        _lastBackPress != null &&
+        now.difference(_lastBackPress!) < const Duration(seconds: 2);
+    if (shouldExit) {
+      SystemNavigator.pop();
+      return;
+    }
+
+    _lastBackPress = now;
+    SnackbarService.info('Press back again to exit');
   }
 
   int _selectedIndexForPath(String path) {
@@ -94,6 +151,43 @@ class HomeShell extends StatelessWidget {
       return 4;
     }
     return 0;
+  }
+
+  String _fallbackBackPath(String path) {
+    if (path.startsWith('/orders')) {
+      return AppRoutes.orders;
+    }
+    if (path.startsWith('/customers')) {
+      return AppRoutes.customers;
+    }
+    if (path.startsWith('/drivers')) {
+      return AppRoutes.drivers;
+    }
+    if (path.startsWith('/vehicles')) {
+      return AppRoutes.vehicles;
+    }
+    if (path.startsWith('/locations')) {
+      return AppRoutes.locations;
+    }
+    if (path.startsWith('/water-points')) {
+      return AppRoutes.waterPoints;
+    }
+    if (path.startsWith('/partner-tankers')) {
+      return AppRoutes.partnerTankers;
+    }
+    if (path.startsWith('/expense-categories')) {
+      return AppRoutes.expenseCategories;
+    }
+    if (path.startsWith('/expenses')) {
+      return AppRoutes.expenses;
+    }
+    if (path.startsWith('/payments')) {
+      return AppRoutes.pendingPayments;
+    }
+    if (path.startsWith('/settings') || path.startsWith('/search')) {
+      return AppRoutes.more;
+    }
+    return AppRoutes.home;
   }
 }
 

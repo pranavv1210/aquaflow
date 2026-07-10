@@ -1,8 +1,14 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../services/connectivity_providers.dart';
+import '../../services/snackbar_service.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_elevation.dart';
+import '../../theme/app_glass.dart';
+import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 
 class NetworkBanner extends ConsumerStatefulWidget {
@@ -13,93 +19,103 @@ class NetworkBanner extends ConsumerStatefulWidget {
 }
 
 class _NetworkBannerState extends ConsumerState<NetworkBanner> {
-  bool _wasOffline = false;
+  AppConnectionState? _lastNotified;
 
   @override
   Widget build(BuildContext context) {
-    final isOnline = ref.watch(isOnlineProvider);
+    final connection = ref.watch(appConnectionProvider);
+    final state = connection.maybeWhen(
+      data: (AppConnectionState value) => value,
+      orElse: () => AppConnectionState.online,
+    );
+    _notifyTransition(state);
 
-    if (!isOnline) {
-      _wasOffline = true;
-      return const _Banner(
-        label: 'Offline',
-        backgroundColor: AppColors.softRed,
-        icon: Icons.wifi_off_rounded,
-      );
+    final isOnline = state == AppConnectionState.online;
+    return Align(
+      alignment: Alignment.topCenter,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.xs),
+          child: _StatusPill(
+            label: isOnline ? 'ONLINE' : 'OFFLINE',
+            icon: isOnline ? Icons.cloud_done_rounded : Icons.cloud_off_rounded,
+            color: isOnline ? AppColors.emeraldGreen : AppColors.softRed,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _notifyTransition(AppConnectionState state) {
+    if (_lastNotified == state) {
+      return;
     }
-
-    if (_wasOffline) {
-      return _Banner(
-        label: 'Back Online',
-        backgroundColor: AppColors.emeraldGreen,
-        icon: Icons.wifi_rounded,
-        onVisible: () {
-          Future<void>.delayed(const Duration(seconds: 2), () {
-            if (mounted) {
-              setState(() => _wasOffline = false);
-            }
-          });
-        },
-      );
-    }
-
-    return const SizedBox.shrink();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _lastNotified == state) {
+        return;
+      }
+      if (_lastNotified != null) {
+        if (state == AppConnectionState.online) {
+          SnackbarService.success('Back Online');
+        } else {
+          SnackbarService.warning('Internet Lost');
+        }
+      }
+      _lastNotified = state;
+    });
   }
 }
 
-class _Banner extends StatefulWidget {
-  const _Banner({
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({
     required this.label,
-    required this.backgroundColor,
     required this.icon,
-    this.onVisible,
+    required this.color,
   });
 
   final String label;
-  final Color backgroundColor;
   final IconData icon;
-  final VoidCallback? onVisible;
-
-  @override
-  State<_Banner> createState() => _BannerState();
-}
-
-class _BannerState extends State<_Banner> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => widget.onVisible?.call(),
-    );
-  }
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: widget.label,
+      label: label,
       liveRegion: true,
-      child: Material(
-        color: widget.backgroundColor,
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.xs,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: AppGlass.blur,
+            sigmaY: AppGlass.blur,
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.76),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              border: Border.all(color: color.withValues(alpha: 0.28)),
+              boxShadow: AppElevation.soft,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Icon(widget.icon, color: Colors.white, size: 18),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  widget.label,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xxs,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Icon(icon, color: color, size: 15),
+                  const SizedBox(width: AppSpacing.xxs),
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

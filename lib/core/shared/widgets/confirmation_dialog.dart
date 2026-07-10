@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_glass.dart';
+import '../../theme/app_radius.dart';
+import '../../theme/app_spacing.dart';
+
 class ConfirmationDialog extends StatelessWidget {
   const ConfirmationDialog({
     required this.title,
@@ -26,6 +30,7 @@ class ConfirmationDialog extends StatelessWidget {
   }) async {
     final result = await showDialog<bool>(
       context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
       builder: (BuildContext context) {
         return ConfirmationDialog(
           title: title,
@@ -41,25 +46,55 @@ class ConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(title),
-      content: Text(message),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(cancelLabel),
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(AppSpacing.lg),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: BackdropFilter(
+          filter: AppGlass.blurFilter(AppGlass.heavyBlur),
+          child: DecoratedBox(
+            decoration: AppGlass.decoration(radius: AppRadius.lg),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(title, style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(message, style: Theme.of(context).textTheme.bodyMedium),
+                  const SizedBox(height: AppSpacing.lg),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: Text(cancelLabel),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          style:
+                              isDestructive
+                                  ? FilledButton.styleFrom(
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.error,
+                                  )
+                                  : null,
+                          child: Text(confirmLabel),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          style:
-              isDestructive
-                  ? FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                  )
-                  : null,
-          child: Text(confirmLabel),
-        ),
-      ],
+      ),
     );
   }
 }

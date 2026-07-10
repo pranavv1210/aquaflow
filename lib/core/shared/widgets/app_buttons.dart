@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
@@ -28,7 +29,13 @@ class PrimaryButton extends StatelessWidget {
             : _ButtonContent(label: label, icon: icon);
 
     return FilledButton(
-      onPressed: isLoading ? null : onPressed,
+      onPressed:
+          isLoading || onPressed == null
+              ? null
+              : () {
+                HapticFeedback.lightImpact();
+                onPressed?.call();
+              },
       style: FilledButton.styleFrom(
         minimumSize: const Size.fromHeight(52),
         shape: RoundedRectangleBorder(
@@ -55,7 +62,13 @@ class SecondaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return OutlinedButton(
-      onPressed: onPressed,
+      onPressed:
+          onPressed == null
+              ? null
+              : () {
+                HapticFeedback.selectionClick();
+                onPressed?.call();
+              },
       style: OutlinedButton.styleFrom(
         minimumSize: const Size.fromHeight(52),
         shape: RoundedRectangleBorder(

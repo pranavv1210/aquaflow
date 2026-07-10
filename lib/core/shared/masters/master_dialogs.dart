@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../services/snackbar_service.dart';
 import '../widgets/confirmation_dialog.dart';
 
 class MasterDialogs {
@@ -30,14 +31,10 @@ class MasterDialogs {
   }
 
   static void showSaved(BuildContext context, String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    SnackbarService.success(message);
   }
 
   static void showError(BuildContext context, String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    SnackbarService.error(message);
   }
 }
