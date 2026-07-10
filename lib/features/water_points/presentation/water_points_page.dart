@@ -12,6 +12,14 @@ class WaterPointsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final nav = ref.watch(navigationServiceProvider);
+    ref.listen(waterPointRealtimeProvider, (
+      _,
+      AsyncValue<List<Map<String, dynamic>>> next,
+    ) {
+      if (next.hasValue) {
+        ref.invalidate(waterPointListProvider);
+      }
+    });
     return BaseMasterPage<WaterPoint>(
       title: 'Water Points',
       subtitle: 'Water filling points',

@@ -12,6 +12,14 @@ class LocationsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigation = ref.watch(navigationServiceProvider);
+    ref.listen(locationRealtimeProvider, (
+      _,
+      AsyncValue<List<Map<String, dynamic>>> next,
+    ) {
+      if (next.hasValue) {
+        ref.invalidate(locationListProvider);
+      }
+    });
     return BaseMasterPage<Location>(
       title: 'Locations',
       subtitle: 'Location master',

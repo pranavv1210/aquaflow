@@ -15,7 +15,9 @@ final locationRepositoryProvider = Provider<LocationRepository>((ref) {
   return SupabaseLocationRepository(client);
 });
 
-final locationValidationServiceProvider = Provider<LocationValidationService>((ref) {
+final locationValidationServiceProvider = Provider<LocationValidationService>((
+  ref,
+) {
   return const LocationValidationService();
 });
 
@@ -32,35 +34,53 @@ final searchLocationsUseCaseProvider = Provider<SearchLocationsUseCase>((ref) {
 });
 
 final createLocationUseCaseProvider = Provider<CreateLocationUseCase>((ref) {
-  return CreateLocationUseCase(ref.watch(locationRepositoryProvider), ref.watch(locationValidationServiceProvider));
+  return CreateLocationUseCase(
+    ref.watch(locationRepositoryProvider),
+    ref.watch(locationValidationServiceProvider),
+  );
 });
 
 final updateLocationUseCaseProvider = Provider<UpdateLocationUseCase>((ref) {
-  return UpdateLocationUseCase(ref.watch(locationRepositoryProvider), ref.watch(locationValidationServiceProvider));
+  return UpdateLocationUseCase(
+    ref.watch(locationRepositoryProvider),
+    ref.watch(locationValidationServiceProvider),
+  );
 });
 
 final deleteLocationUseCaseProvider = Provider<DeleteLocationUseCase>((ref) {
   return DeleteLocationUseCase(ref.watch(locationRepositoryProvider));
 });
 
-final refreshLocationsUseCaseProvider = Provider<RefreshLocationsUseCase>((ref) {
+final refreshLocationsUseCaseProvider = Provider<RefreshLocationsUseCase>((
+  ref,
+) {
   return const RefreshLocationsUseCase();
 });
 
-final locationListProvider = createMasterListProvider<Location, GetLocationsUseCase>(
-  repositoryProvider: getLocationsUseCaseProvider,
-  load: (GetLocationsUseCase useCase) => useCase(),
-);
+final locationListProvider =
+    createMasterListProvider<Location, GetLocationsUseCase>(
+      repositoryProvider: getLocationsUseCaseProvider,
+      load: (GetLocationsUseCase useCase) => useCase(),
+    );
 
-final locationSearchProvider = createMasterSearchProvider<Location, SearchLocationsUseCase>(
-  repositoryProvider: searchLocationsUseCaseProvider,
-  search: (SearchLocationsUseCase useCase, String query) => useCase(query),
-);
+final locationSearchProvider =
+    createMasterSearchProvider<Location, SearchLocationsUseCase>(
+      repositoryProvider: searchLocationsUseCaseProvider,
+      search: (SearchLocationsUseCase useCase, String query) => useCase(query),
+    );
 
-final selectedLocationProvider = createSelectedMasterProvider<Location, GetLocationUseCase>(
-  repositoryProvider: getLocationUseCaseProvider,
-  load: (GetLocationUseCase useCase, String id) => useCase(id),
-);
+final selectedLocationProvider =
+    createSelectedMasterProvider<Location, GetLocationUseCase>(
+      repositoryProvider: getLocationUseCaseProvider,
+      load: (GetLocationUseCase useCase, String id) => useCase(id),
+    );
+
+final locationRealtimeProvider =
+    StreamProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
+      return ref
+          .watch(realtimeServiceProvider)
+          .tableStream(table: 'locations', primaryKey: <String>['id']);
+    });
 
 Future<void> refreshLocationProviders(WidgetRef ref) async {
   await ref.read(refreshLocationsUseCaseProvider)();
@@ -74,9 +94,12 @@ Future<void> saveLocationProviders(
   required void Function(Location location) onSuccess,
   required void Function(String message) onFailure,
 }) async {
-  final result = locationId == null
-      ? await ref.read(createLocationUseCaseProvider)(input)
-      : await ref.read(updateLocationUseCaseProvider)(UpdateParams<LocationInput>(id: locationId, input: input));
+  final result =
+      locationId == null
+          ? await ref.read(createLocationUseCaseProvider)(input)
+          : await ref.read(updateLocationUseCaseProvider)(
+            UpdateParams<LocationInput>(id: locationId, input: input),
+          );
   result.when(
     success: (Location location) {
       ref.invalidate(locationListProvider);
