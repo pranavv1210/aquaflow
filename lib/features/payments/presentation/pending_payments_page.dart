@@ -55,39 +55,19 @@ class _PendingPaymentsPageState extends ConsumerState<PendingPaymentsPage> {
             ? ref.watch(pendingPaymentListProvider)
             : ref.watch(pendingPaymentSearchProvider(_query));
 
-    return RefreshIndicator(
-      onRefresh: _refresh,
-      child: payments.when(
-        loading:
-            () => const AppScreen(
-              children: <Widget>[
-                PageHeader(title: 'Pending Payments', subtitle: 'Loading...'),
-                SearchField(label: 'Search payments'),
-                SkeletonLoader(height: 136),
-                SkeletonLoader(height: 136),
-              ],
-            ),
-        error:
-            (Object error, StackTrace stackTrace) => AppScreen(
-              children: <Widget>[
-                const PageHeader(
-                  title: 'Pending Payments',
-                  subtitle: 'Payment follow-up',
-                ),
-                SearchField(
-                  label: 'Search payments',
-                  controller: _searchController,
-                  onChanged: (String value) => setState(() => _query = value),
-                ),
-                ErrorStateWidget(
-                  title: 'Unable to load pending payments',
-                  message: error.toString(),
-                  onRetry: _invalidate,
-                ),
-              ],
-            ),
-        data: (List<OrderRecord> orders) {
-          return AppScreen(
+    return payments.when(
+      loading:
+          () => const AppScreen(
+            children: <Widget>[
+              PageHeader(title: 'Pending Payments', subtitle: 'Loading...'),
+              SearchField(label: 'Search payments'),
+              SkeletonLoader(height: 136),
+              SkeletonLoader(height: 136),
+            ],
+          ),
+      error:
+          (Object error, StackTrace stackTrace) => AppScreen(
+            onRefresh: _refresh,
             children: <Widget>[
               const PageHeader(
                 title: 'Pending Payments',
@@ -98,25 +78,44 @@ class _PendingPaymentsPageState extends ConsumerState<PendingPaymentsPage> {
                 controller: _searchController,
                 onChanged: (String value) => setState(() => _query = value),
               ),
-              if (orders.isEmpty)
-                const EmptyStateWidget(
-                  title: 'No Pending Payments',
-                  message: 'Open payments will appear here.',
-                  icon: Icons.account_balance_wallet_outlined,
-                )
-              else
-                ...orders.map((OrderRecord order) {
-                  return _PendingPaymentCard(
-                    order: order,
-                    onCall: () => _showCallInfo(order),
-                    onMarkPaid: () => _showMarkPaidSheet(order),
-                    onEdit: () => context.go(AppRoutes.editOrderPath(order.id)),
-                  );
-                }),
+              ErrorStateWidget(
+                title: 'Unable to load pending payments',
+                message: error.toString(),
+                onRetry: _invalidate,
+              ),
             ],
-          );
-        },
-      ),
+          ),
+      data: (List<OrderRecord> orders) {
+        return AppScreen(
+          onRefresh: _refresh,
+          children: <Widget>[
+            const PageHeader(
+              title: 'Pending Payments',
+              subtitle: 'Payment follow-up',
+            ),
+            SearchField(
+              label: 'Search payments',
+              controller: _searchController,
+              onChanged: (String value) => setState(() => _query = value),
+            ),
+            if (orders.isEmpty)
+              const EmptyStateWidget(
+                title: 'No Pending Payments',
+                message: 'Open payments will appear here.',
+                icon: Icons.account_balance_wallet_outlined,
+              )
+            else
+              ...orders.map((OrderRecord order) {
+                return _PendingPaymentCard(
+                  order: order,
+                  onCall: () => _showCallInfo(order),
+                  onMarkPaid: () => _showMarkPaidSheet(order),
+                  onEdit: () => context.go(AppRoutes.editOrderPath(order.id)),
+                );
+              }),
+          ],
+        );
+      },
     );
   }
 

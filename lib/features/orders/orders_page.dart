@@ -66,47 +66,46 @@ class _OrdersPageState extends ConsumerState<OrdersPage> {
         tooltip: 'New order',
         onPressed: () => context.go(AppRoutes.newOrder),
       ),
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: orders.when(
-          loading: _buildLoading,
-          error:
-              (Object error, StackTrace stackTrace) => AppScreen(
-                children: <Widget>[
-                  _buildHeader(context),
-                  _buildSearch(),
-                  ErrorStateWidget(
-                    title: 'Unable to load orders',
-                    message: error.toString(),
-                    onRetry: _invalidateCurrentList,
-                  ),
-                ],
-              ),
-          data: (List<OrderRecord> items) {
-            final filtered = _applyFilter(items);
-            return AppScreen(
+      body: orders.when(
+        loading: _buildLoading,
+        error:
+            (Object error, StackTrace stackTrace) => AppScreen(
+              onRefresh: _refresh,
               children: <Widget>[
                 _buildHeader(context),
                 _buildSearch(),
-                _buildFilters(),
-                if (filtered.isEmpty)
-                  EmptyStateWidget(
-                    title:
-                        _query.trim().isEmpty
-                            ? 'No Orders Yet'
-                            : 'No Orders Found',
-                    message:
-                        _query.trim().isEmpty
-                            ? 'Create the first tanker delivery order.'
-                            : 'Try a different customer, phone, or location.',
-                    icon: Icons.receipt_long_outlined,
-                  )
-                else
-                  ...filtered.map(_buildOrderCard),
+                ErrorStateWidget(
+                  title: 'Unable to load orders',
+                  message: error.toString(),
+                  onRetry: _invalidateCurrentList,
+                ),
               ],
-            );
-          },
-        ),
+            ),
+        data: (List<OrderRecord> items) {
+          final filtered = _applyFilter(items);
+          return AppScreen(
+            onRefresh: _refresh,
+            children: <Widget>[
+              _buildHeader(context),
+              _buildSearch(),
+              _buildFilters(),
+              if (filtered.isEmpty)
+                EmptyStateWidget(
+                  title:
+                      _query.trim().isEmpty
+                          ? 'No Orders Yet'
+                          : 'No Orders Found',
+                  message:
+                      _query.trim().isEmpty
+                          ? 'Create the first tanker delivery order.'
+                          : 'Try a different customer, phone, or location.',
+                  icon: Icons.receipt_long_outlined,
+                )
+              else
+                ...filtered.map(_buildOrderCard),
+            ],
+          );
+        },
       ),
     );
   }

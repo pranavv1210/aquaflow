@@ -71,37 +71,55 @@ class PageHeader extends StatelessWidget {
 
   String _fallbackBackPath(BuildContext context) {
     final path = GoRouterState.of(context).uri.path;
-    if (path.startsWith('/orders')) {
+    if (path == AppRoutes.customers ||
+        path == AppRoutes.drivers ||
+        path == AppRoutes.vehicles ||
+        path == AppRoutes.locations ||
+        path == AppRoutes.waterPoints ||
+        path == AppRoutes.partnerTankers ||
+        path == AppRoutes.expenseCategories ||
+        path == AppRoutes.expenses ||
+        path == AppRoutes.pendingPayments) {
+      return AppRoutes.masters;
+    }
+    if (path.startsWith(AppRoutes.newOrder) ||
+        path.startsWith(AppRoutes.orderDetails)) {
       return AppRoutes.orders;
     }
-    if (path.startsWith('/customers')) {
+    if (path.startsWith(AppRoutes.customerProfile) ||
+        path.startsWith(AppRoutes.customerForm)) {
       return AppRoutes.customers;
     }
-    if (path.startsWith('/drivers')) {
+    if (path.startsWith(AppRoutes.driverProfile) ||
+        path.startsWith(AppRoutes.driverForm)) {
       return AppRoutes.drivers;
     }
-    if (path.startsWith('/vehicles')) {
+    if (path.startsWith(AppRoutes.vehicleDetails) ||
+        path.startsWith(AppRoutes.vehicleForm)) {
       return AppRoutes.vehicles;
     }
-    if (path.startsWith('/locations')) {
+    if (path.startsWith(AppRoutes.locationProfile) ||
+        path.startsWith(AppRoutes.locationForm)) {
       return AppRoutes.locations;
     }
-    if (path.startsWith('/water-points')) {
+    if (path.startsWith(AppRoutes.waterPointProfile) ||
+        path.startsWith(AppRoutes.waterPointForm)) {
       return AppRoutes.waterPoints;
     }
-    if (path.startsWith('/partner-tankers')) {
+    if (path.startsWith(AppRoutes.partnerTankerProfile) ||
+        path.startsWith(AppRoutes.partnerTankerForm)) {
       return AppRoutes.partnerTankers;
     }
-    if (path.startsWith('/expense-categories')) {
+    if (path.startsWith(AppRoutes.expenseCategoryProfile) ||
+        path.startsWith(AppRoutes.expenseCategoryForm)) {
       return AppRoutes.expenseCategories;
     }
-    if (path.startsWith('/expenses')) {
+    if (path.startsWith(AppRoutes.expenseDetails) ||
+        path.startsWith(AppRoutes.expenseForm)) {
       return AppRoutes.expenses;
     }
-    if (path.startsWith('/payments')) {
-      return AppRoutes.pendingPayments;
-    }
-    if (path.startsWith('/settings') || path.startsWith('/search')) {
+    if (path.startsWith(AppRoutes.settings) ||
+        path.startsWith(AppRoutes.globalSearch)) {
       return AppRoutes.more;
     }
     return AppRoutes.home;

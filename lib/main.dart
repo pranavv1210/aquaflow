@@ -23,6 +23,42 @@ Future<void> main() async {
           stackTrace: details.stack,
         );
       };
+      ErrorWidget.builder = (FlutterErrorDetails details) {
+        return Material(
+          color: const Color(0xFFF1F9FF),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    color: Color(0xFFEF4444),
+                    size: 42,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Something went wrong',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Please go back and try again.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Color(0xFF334155), fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      };
 
       PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
         appLogger.e('Uncaught platform error', error: error, stackTrace: stack);

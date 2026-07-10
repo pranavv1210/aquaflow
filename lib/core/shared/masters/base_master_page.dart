@@ -63,6 +63,7 @@ class _BaseMasterPageState<TItem> extends ConsumerState<BaseMasterPage<TItem>> {
     final items = widget.loadItems(ref, _query);
 
     return AppScreen(
+      onRefresh: _refresh,
       floatingActionButton:
           widget.onAdd == null
               ? null
@@ -88,16 +89,13 @@ class _BaseMasterPageState<TItem> extends ConsumerState<BaseMasterPage<TItem>> {
             );
           },
           data: (List<TItem> data) {
-            return RefreshIndicator(
-              onRefresh: _refresh,
-              child: _MasterList<TItem>(
-                items: data,
-                isSearching: _query.isNotEmpty,
-                emptyTitle: widget.emptyTitle,
-                emptyMessage: widget.emptyMessage,
-                emptyIcon: widget.emptyIcon,
-                buildItem: widget.buildItem,
-              ),
+            return _MasterList<TItem>(
+              items: data,
+              isSearching: _query.isNotEmpty,
+              emptyTitle: widget.emptyTitle,
+              emptyMessage: widget.emptyMessage,
+              emptyIcon: widget.emptyIcon,
+              buildItem: widget.buildItem,
             );
           },
         ),
@@ -147,16 +145,13 @@ class _MasterList<TItem> extends StatelessWidget {
       );
     }
 
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const AlwaysScrollableScrollPhysics(),
-      itemBuilder: (BuildContext context, int index) {
-        return buildItem(context, items[index]);
-      },
-      separatorBuilder: (BuildContext context, int index) {
-        return const SizedBox(height: AppSpacing.md);
-      },
-      itemCount: items.length,
+    return Column(
+      children: <Widget>[
+        for (var index = 0; index < items.length; index++) ...<Widget>[
+          buildItem(context, items[index]),
+          if (index != items.length - 1) const SizedBox(height: AppSpacing.md),
+        ],
+      ],
     );
   }
 }

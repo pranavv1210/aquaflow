@@ -15,42 +15,50 @@ class AppScreen extends StatelessWidget {
       AppSpacing.xxl,
     ),
     this.floatingActionButton,
+    this.onRefresh,
   });
 
   final List<Widget> children;
   final EdgeInsetsGeometry padding;
   final Widget? floatingActionButton;
+  final RefreshCallback? onRefresh;
 
   @override
   Widget build(BuildContext context) {
+    final scrollView = CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      slivers: <Widget>[
+        SliverPadding(
+          padding: padding,
+          sliver: SliverList.separated(
+            itemBuilder:
+                (BuildContext context, int index) => children[index]
+                    .animate(delay: Duration(milliseconds: index * 35))
+                    .fadeIn(duration: const Duration(milliseconds: 220))
+                    .slideY(
+                      begin: 0.025,
+                      end: 0,
+                      duration: const Duration(milliseconds: 260),
+                      curve: Curves.easeOutCubic,
+                    ),
+            separatorBuilder:
+                (BuildContext context, int index) =>
+                    const SizedBox(height: AppSpacing.md),
+            itemCount: children.length,
+          ),
+        ),
+      ],
+    );
+
     final content = Positioned.fill(
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-        child: CustomScrollView(
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          slivers: <Widget>[
-            SliverPadding(
-              padding: padding,
-              sliver: SliverList.separated(
-                itemBuilder:
-                    (BuildContext context, int index) => children[index]
-                        .animate(delay: Duration(milliseconds: index * 35))
-                        .fadeIn(duration: const Duration(milliseconds: 220))
-                        .slideY(
-                          begin: 0.025,
-                          end: 0,
-                          duration: const Duration(milliseconds: 260),
-                          curve: Curves.easeOutCubic,
-                        ),
-                separatorBuilder:
-                    (BuildContext context, int index) =>
-                        const SizedBox(height: AppSpacing.md),
-                itemCount: children.length,
-              ),
-            ),
-          ],
-        ),
+        child:
+            onRefresh == null
+                ? scrollView
+                : RefreshIndicator(onRefresh: onRefresh!, child: scrollView),
       ),
     );
 
