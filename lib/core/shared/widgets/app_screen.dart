@@ -21,19 +21,24 @@ class AppScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = CustomScrollView(
-      slivers: <Widget>[
-        SliverPadding(
-          padding: padding,
-          sliver: SliverList.separated(
-            itemBuilder: (BuildContext context, int index) => children[index],
-            separatorBuilder:
-                (BuildContext context, int index) =>
-                    const SizedBox(height: AppSpacing.md),
-            itemCount: children.length,
+    final content = GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: CustomScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        slivers: <Widget>[
+          SliverPadding(
+            padding: padding,
+            sliver: SliverList.separated(
+              itemBuilder: (BuildContext context, int index) => children[index],
+              separatorBuilder:
+                  (BuildContext context, int index) =>
+                      const SizedBox(height: AppSpacing.md),
+              itemCount: children.length,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
 
     if (floatingActionButton == null) {

@@ -10,6 +10,7 @@ import '../../core/models/location.dart';
 import '../../core/models/vehicle.dart';
 import '../../core/models/water_point.dart';
 import '../../core/router/app_routes.dart';
+import '../../core/services/connectivity_providers.dart';
 import '../../core/shared/masters/master_dialogs.dart';
 import '../../core/shared/widgets/app_buttons.dart';
 import '../../core/shared/widgets/app_date_picker.dart';
@@ -79,6 +80,7 @@ class _NewOrderPageState extends ConsumerState<NewOrderPage> {
     final waterPoints = ref.watch(waterPointListProvider);
     final vehicles = ref.watch(vehicleListProvider);
     final drivers = ref.watch(driverListProvider);
+    final isOnline = ref.watch(isOnlineProvider);
     final editingOrder =
         _isEditing ? ref.watch(selectedOrderProvider(widget.orderId!)) : null;
 
@@ -326,10 +328,15 @@ class _NewOrderPageState extends ConsumerState<NewOrderPage> {
             ],
           ),
           PrimaryButton(
-            label: _isEditing ? 'Update Order' : 'Save Order',
+            label:
+                isOnline
+                    ? _isEditing
+                        ? 'Update Order'
+                        : 'Save Order'
+                    : 'Offline',
             icon: Icons.check_rounded,
             isLoading: _isSaving,
-            onPressed: _save,
+            onPressed: isOnline ? _save : null,
           ),
           SecondaryButton(
             label: 'Cancel',
@@ -412,6 +419,8 @@ class _NewOrderPageState extends ConsumerState<NewOrderPage> {
       return;
     }
     setState(() => _isSaving = true);
+    final amount = num.parse(_amountController.text.trim());
+    final paidAmount = num.parse(_paidAmountController.text.trim());
     final input = OrderInput(
       orderDate: _orderDate,
       orderTime: _orderTime,
@@ -421,9 +430,9 @@ class _NewOrderPageState extends ConsumerState<NewOrderPage> {
       vehicleId: _selectedVehicle!.id,
       driverId: _selectedDriver!.id,
       loadCount: int.parse(_loadCountController.text.trim()),
-      amount: num.parse(_amountController.text.trim()),
-      paidAmount: num.parse(_paidAmountController.text.trim()),
-      paymentStatus: _paymentStatus,
+      amount: amount,
+      paidAmount: paidAmount,
+      paymentStatus: _paymentStatusFor(amount: amount, paidAmount: paidAmount),
       deliveryStatus: _deliveryStatus,
       remarks: _remarksController.text,
     );
@@ -535,6 +544,16 @@ class _NewOrderPageState extends ConsumerState<NewOrderPage> {
         .where((String part) => part.isNotEmpty)
         .map((String part) => part[0].toUpperCase() + part.substring(1))
         .join(' ');
+  }
+
+  String _paymentStatusFor({required num amount, required num paidAmount}) {
+    if (paidAmount >= amount) {
+      return 'paid';
+    }
+    if (paidAmount > 0) {
+      return 'partial';
+    }
+    return _paymentStatus;
   }
 }
 

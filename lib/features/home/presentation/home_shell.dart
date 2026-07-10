@@ -78,7 +78,12 @@ class HomeShell extends StatelessWidget {
     if (path.startsWith('/customers') ||
         path.startsWith('/drivers') ||
         path.startsWith('/vehicles') ||
+        path.startsWith('/locations') ||
+        path.startsWith('/water-points') ||
         path.startsWith('/partners') ||
+        path.startsWith('/partner-tankers') ||
+        path.startsWith('/expense-categories') ||
+        path.startsWith('/expenses') ||
         path.startsWith('/payments') ||
         path.startsWith('/masters')) {
       return 3;

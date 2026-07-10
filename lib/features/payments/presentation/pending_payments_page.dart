@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/helpers/app_formatters.dart';
 import '../../../core/router/app_routes.dart';
+import '../../../core/services/connectivity_providers.dart';
 import '../../../core/shared/masters/master_dialogs.dart';
 import '../../../core/shared/widgets/app_buttons.dart';
 import '../../../core/shared/widgets/app_screen.dart';
@@ -295,10 +296,10 @@ class _MarkPaidSheetState extends ConsumerState<_MarkPaidSheet> {
             ),
             const SizedBox(height: AppSpacing.md),
             PrimaryButton(
-              label: 'Save Payment',
+              label: ref.watch(isOnlineProvider) ? 'Save Payment' : 'Offline',
               icon: Icons.check_rounded,
               isLoading: _isSaving,
-              onPressed: _save,
+              onPressed: ref.watch(isOnlineProvider) ? _save : null,
             ),
           ],
         ),

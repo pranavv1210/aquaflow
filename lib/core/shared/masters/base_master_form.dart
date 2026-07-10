@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../services/connectivity_providers.dart';
 import '../widgets/app_buttons.dart';
 import '../widgets/app_screen.dart';
 import '../widgets/page_header.dart';
 
-class BaseMasterForm extends StatelessWidget {
+class BaseMasterForm extends ConsumerWidget {
   const BaseMasterForm({
     required this.formKey,
     required this.title,
@@ -27,7 +29,8 @@ class BaseMasterForm extends StatelessWidget {
   final String saveLabel;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isOnline = ref.watch(isOnlineProvider);
     return Form(
       key: formKey,
       child: PopScope(
@@ -37,10 +40,10 @@ class BaseMasterForm extends StatelessWidget {
             PageHeader(title: title, subtitle: subtitle),
             ...children,
             PrimaryButton(
-              label: saveLabel,
+              label: isOnline ? saveLabel : 'Offline',
               icon: Icons.check_rounded,
               isLoading: isSaving,
-              onPressed: onSave,
+              onPressed: isOnline ? onSave : null,
             ),
             SecondaryButton(
               label: 'Cancel',

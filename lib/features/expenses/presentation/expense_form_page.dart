@@ -5,6 +5,7 @@ import '../../../core/application/navigation_providers.dart';
 import '../../../core/models/driver.dart';
 import '../../../core/models/expense_category.dart';
 import '../../../core/models/vehicle.dart';
+import '../../../core/services/connectivity_providers.dart';
 import '../../../core/shared/masters/master_dialogs.dart';
 import '../../../core/shared/widgets/app_buttons.dart';
 import '../../../core/shared/widgets/app_date_picker.dart';
@@ -58,6 +59,7 @@ class _ExpenseFormPageState extends ConsumerState<ExpenseFormPage> {
     final categories = ref.watch(expenseCategoryListProvider);
     final vehicles = ref.watch(vehicleListProvider);
     final drivers = ref.watch(driverListProvider);
+    final isOnline = ref.watch(isOnlineProvider);
     final editingExpense =
         _isEditing
             ? ref.watch(selectedExpenseProvider(widget.expenseId!))
@@ -181,10 +183,15 @@ class _ExpenseFormPageState extends ConsumerState<ExpenseFormPage> {
             ],
           ),
           PrimaryButton(
-            label: _isEditing ? 'Update Expense' : 'Save Expense',
+            label:
+                isOnline
+                    ? _isEditing
+                        ? 'Update Expense'
+                        : 'Save Expense'
+                    : 'Offline',
             icon: Icons.check_rounded,
             isLoading: _isSaving,
-            onPressed: _save,
+            onPressed: isOnline ? _save : null,
           ),
           SecondaryButton(
             label: 'Cancel',
