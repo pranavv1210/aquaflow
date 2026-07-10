@@ -32,9 +32,9 @@ class OrderValidationService extends ApplicationService {
         ValidationFailure(message: 'Driver is required.'),
       );
     }
-    if (input.loadCount < 1) {
+    if (input.loadCount < 0) {
       return const Failure<OrderInput>(
-        ValidationFailure(message: 'Load count must be at least 1.'),
+        ValidationFailure(message: 'Load count must be 0 or greater.'),
       );
     }
     if (input.amount <= 0) {

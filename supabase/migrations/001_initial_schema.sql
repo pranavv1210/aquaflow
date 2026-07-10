@@ -193,7 +193,7 @@ create table public.orders (
   updated_at timestamptz not null default now(),
   constraint orders_order_number_not_blank check (length(btrim(order_number)) > 0),
   constraint orders_order_number_unique unique (order_number),
-  constraint orders_load_count_minimum check (load_count >= 1),
+  constraint orders_load_count_minimum check (load_count >= 0),
   constraint orders_amount_positive check (amount > 0),
   constraint orders_paid_amount_valid check (paid_amount >= 0 and paid_amount <= amount),
   constraint orders_own_vehicle_or_partner_tanker check (

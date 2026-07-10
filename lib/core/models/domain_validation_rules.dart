@@ -5,7 +5,7 @@ class DomainValidationRules {
   static const String orderDateRequired = 'Order date is required.';
   static const String orderTimeRequired = 'Order time is required.';
   static const String amountMustBePositive = 'Amount must be greater than 0.';
-  static const String loadCountMinimum = 'Load count must be at least 1.';
+    static const String loadCountMinimum = 'Load count must be 0 or greater.';
   static const String vehicleOrPartnerRequired =
       'Select either an own vehicle or a partner tanker.';
   static const String vehicleOptionalWhenPartnerSelected =

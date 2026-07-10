@@ -512,8 +512,8 @@ class _NewOrderPageState extends ConsumerState<NewOrderPage> {
 
   String? _validateLoadCount(String? value) {
     final parsed = int.tryParse(value?.trim() ?? '');
-    if (parsed == null || parsed < 1) {
-      return 'Load count must be at least 1';
+    if (parsed == null || parsed < 0) {
+      return 'Load count must be 0 or greater';
     }
     return null;
   }
