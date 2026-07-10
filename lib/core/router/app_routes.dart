@@ -90,4 +90,12 @@ class AppRoutes {
   static String editExpenseCategoryPath(String expenseCategoryId) {
     return '$expenseCategoryForm/$expenseCategoryId';
   }
+
+  static String orderDetailsPath(String orderId) {
+    return '$orderDetails/$orderId';
+  }
+
+  static String editOrderPath(String orderId) {
+    return '$newOrder/$orderId';
+  }
 }

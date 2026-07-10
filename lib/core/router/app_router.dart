@@ -70,10 +70,28 @@ final GoRouter appRouter = GoRouter(
                   _slidePage(state, const NewOrderPage()),
         ),
         GoRoute(
+          path: '${AppRoutes.newOrder}/:orderId',
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return _slidePage(
+              state,
+              NewOrderPage(orderId: state.pathParameters['orderId']),
+            );
+          },
+        ),
+        GoRoute(
           path: AppRoutes.orderDetails,
           pageBuilder:
               (BuildContext context, GoRouterState state) =>
                   _slidePage(state, const OrderDetailsPage()),
+        ),
+        GoRoute(
+          path: '${AppRoutes.orderDetails}/:orderId',
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return _slidePage(
+              state,
+              OrderDetailsPage(orderId: state.pathParameters['orderId']!),
+            );
+          },
         ),
         GoRoute(
           path: AppRoutes.analytics,
@@ -138,9 +156,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '${AppRoutes.driverForm}/:driverId',
           builder: (BuildContext context, GoRouterState state) {
-            return DriverFormPage(
-              driverId: state.pathParameters['driverId'],
-            );
+            return DriverFormPage(driverId: state.pathParameters['driverId']);
           },
         ),
         GoRoute(
@@ -265,8 +281,7 @@ final GoRouter appRouter = GoRouter(
           path: '${AppRoutes.expenseCategoryProfile}/:expenseCategoryId',
           builder: (BuildContext context, GoRouterState state) {
             return ExpenseCategoryProfilePage(
-              expenseCategoryId:
-                  state.pathParameters['expenseCategoryId']!,
+              expenseCategoryId: state.pathParameters['expenseCategoryId']!,
             );
           },
         ),
@@ -280,8 +295,7 @@ final GoRouter appRouter = GoRouter(
           path: '${AppRoutes.expenseCategoryForm}/:expenseCategoryId',
           builder: (BuildContext context, GoRouterState state) {
             return ExpenseCategoryFormPage(
-              expenseCategoryId:
-                  state.pathParameters['expenseCategoryId'],
+              expenseCategoryId: state.pathParameters['expenseCategoryId'],
             );
           },
         ),

@@ -5,9 +5,34 @@ import 'glass_card.dart';
 import 'status_chip.dart';
 
 class OrderCard extends StatelessWidget {
-  const OrderCard({super.key, this.onTap});
+  const OrderCard({
+    super.key,
+    this.onTap,
+    this.orderNumber = 'Order #--',
+    this.customerName = 'Customer --',
+    this.locationName = 'Location --',
+    this.vehicleName = 'Vehicle --',
+    this.driverName = 'Driver --',
+    this.amount = '₹--',
+    this.pendingAmount = '₹--',
+    this.loadCount = '--',
+    this.paymentStatus = 'Pending',
+    this.deliveryStatus = '--',
+    this.date = '--',
+  });
 
   final VoidCallback? onTap;
+  final String orderNumber;
+  final String customerName;
+  final String locationName;
+  final String vehicleName;
+  final String driverName;
+  final String amount;
+  final String pendingAmount;
+  final String loadCount;
+  final String paymentStatus;
+  final String deliveryStatus;
+  final String date;
 
   @override
   Widget build(BuildContext context) {
@@ -22,25 +47,42 @@ class OrderCard extends StatelessWidget {
             children: <Widget>[
               Expanded(
                 child: Text(
-                  'Order #--',
+                  orderNumber,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
-              StatusChip(label: 'Pending', color: colorScheme.primary),
+              StatusChip(label: paymentStatus, color: colorScheme.primary),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          _MetaRow(icon: Icons.person_outline_rounded, text: 'Customer --'),
+          _MetaRow(icon: Icons.person_outline_rounded, text: customerName),
           const SizedBox(height: AppSpacing.xs),
-          _MetaRow(icon: Icons.location_on_outlined, text: 'Location --'),
+          _MetaRow(icon: Icons.location_on_outlined, text: locationName),
           const SizedBox(height: AppSpacing.xs),
-          _MetaRow(icon: Icons.local_shipping_outlined, text: 'Vehicle --'),
+          _MetaRow(
+            icon: Icons.local_shipping_outlined,
+            text: '$vehicleName - $driverName',
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          _MetaRow(icon: Icons.event_outlined, text: '$date - $deliveryStatus'),
           const Divider(height: AppSpacing.xl),
           Row(
             children: <Widget>[
-              Text('₹--', style: Theme.of(context).textTheme.titleLarge),
+              Text(amount, style: Theme.of(context).textTheme.titleLarge),
               const Spacer(),
-              Text('-- loads', style: Theme.of(context).textTheme.bodyMedium),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: <Widget>[
+                  Text(
+                    '$loadCount loads',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  Text(
+                    'Pending $pendingAmount',
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                ],
+              ),
             ],
           ),
         ],
