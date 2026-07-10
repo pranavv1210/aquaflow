@@ -7,6 +7,7 @@ import '../../../core/models/driver.dart';
 import '../../../core/shared/masters/master_dialogs.dart';
 import '../../../core/shared/widgets/app_buttons.dart';
 import '../../../core/shared/widgets/app_screen.dart';
+import '../../../core/shared/widgets/dashboard_card.dart';
 import '../../../core/shared/widgets/empty_state_widget.dart';
 import '../../../core/shared/widgets/error_state_widget.dart';
 import '../../../core/shared/widgets/glass_card.dart';
@@ -96,10 +97,40 @@ class _DriverProfileContent extends ConsumerWidget {
             ],
           ),
         ),
-        const SectionTitle(title: 'Recent Trips'),
+        LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final isWide = constraints.maxWidth > 560;
+            return GridView.count(
+              crossAxisCount: isWide ? 3 : 1,
+              crossAxisSpacing: AppSpacing.md,
+              mainAxisSpacing: AppSpacing.md,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              childAspectRatio: isWide ? 1.8 : 2.8,
+              children: const <Widget>[
+                DashboardCard(
+                  title: 'Assigned Vehicle',
+                  value: '--',
+                  icon: Icons.local_shipping_outlined,
+                ),
+                DashboardCard(
+                  title: 'Orders Completed',
+                  value: '--',
+                  icon: Icons.receipt_long_outlined,
+                ),
+                DashboardCard(
+                  title: 'Revenue Generated',
+                  value: '₹--',
+                  icon: Icons.currency_rupee_rounded,
+                ),
+              ],
+            );
+          },
+        ),
+        const SectionTitle(title: 'Recent Orders'),
         const EmptyStateWidget(
-          title: 'Trip History Pending',
-          message: 'Trips will appear after the Orders phase is connected.',
+          title: 'Recent Orders Pending',
+          message: 'Orders will appear after the Orders phase is connected.',
           icon: Icons.route_outlined,
         ),
         SecondaryButton(

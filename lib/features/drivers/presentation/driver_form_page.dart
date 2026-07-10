@@ -45,6 +45,10 @@ class _DriverFormPageState extends ConsumerState<DriverFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_isEditing && _statusController.text.isEmpty) {
+      _statusController.text = 'available';
+    }
+
     if (!_isEditing) {
       return _buildForm();
     }
@@ -66,9 +70,8 @@ class _DriverFormPageState extends ConsumerState<DriverFormPage> {
               title: 'Unable to load driver',
               message: error.toString(),
               onRetry:
-                  () => ref.invalidate(
-                    selectedDriverProvider(widget.driverId!),
-                  ),
+                  () =>
+                      ref.invalidate(selectedDriverProvider(widget.driverId!)),
             ),
           ],
         );
@@ -170,10 +173,7 @@ class _DriverFormPageState extends ConsumerState<DriverFormPage> {
   void _leaveForm({String? savedDriverId}) {
     final navigation = ref.read(navigationServiceProvider);
     if (_isEditing) {
-      navigation.goToDriverProfile(
-        context,
-        savedDriverId ?? widget.driverId!,
-      );
+      navigation.goToDriverProfile(context, savedDriverId ?? widget.driverId!);
       return;
     }
     navigation.goToDrivers(context);

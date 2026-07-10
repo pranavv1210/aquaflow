@@ -14,6 +14,14 @@ class DriversPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigation = ref.watch(navigationServiceProvider);
+    ref.listen(driverRealtimeProvider, (
+      _,
+      AsyncValue<List<Map<String, dynamic>>> next,
+    ) {
+      if (next.hasValue) {
+        ref.invalidate(driverListProvider);
+      }
+    });
 
     return BaseMasterPage<Driver>(
       title: 'Drivers',

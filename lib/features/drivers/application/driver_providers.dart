@@ -15,7 +15,9 @@ final driverRepositoryProvider = Provider<DriverRepository>((ref) {
   return SupabaseDriverRepository(client);
 });
 
-final driverValidationServiceProvider = Provider<DriverValidationService>((ref) {
+final driverValidationServiceProvider = Provider<DriverValidationService>((
+  ref,
+) {
   return const DriverValidationService();
 });
 
@@ -53,11 +55,10 @@ final refreshDriversUseCaseProvider = Provider<RefreshDriversUseCase>((ref) {
   return const RefreshDriversUseCase();
 });
 
-final driverListProvider =
-    createMasterListProvider<Driver, GetDriversUseCase>(
-      repositoryProvider: getDriversUseCaseProvider,
-      load: (GetDriversUseCase useCase) => useCase(),
-    );
+final driverListProvider = createMasterListProvider<Driver, GetDriversUseCase>(
+  repositoryProvider: getDriversUseCaseProvider,
+  load: (GetDriversUseCase useCase) => useCase(),
+);
 
 final driverSearchProvider =
     createMasterSearchProvider<Driver, SearchDriversUseCase>(
@@ -74,6 +75,13 @@ final selectedDriverProvider =
         return useCase(driverId);
       },
     );
+
+final driverRealtimeProvider =
+    StreamProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
+      return ref
+          .watch(realtimeServiceProvider)
+          .tableStream(table: 'drivers', primaryKey: <String>['id']);
+    });
 
 Future<void> refreshDriverProviders(WidgetRef ref) async {
   await ref.read(refreshDriversUseCaseProvider)();
