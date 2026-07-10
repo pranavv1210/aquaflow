@@ -1,20 +1,15 @@
 import '../../../../core/result/result.dart';
+import '../expense_input.dart';
+import '../expense_record.dart';
 
 abstract interface class ExpenseRepository {
-  Future<Result<List<Map<String, dynamic>>>> getExpenses();
+  Future<Result<List<ExpenseRecord>>> getExpenses();
 
-  Future<Result<Map<String, dynamic>>> getExpenseById(String id);
+  Future<Result<ExpenseRecord>> getExpenseById(String id);
 
-  Future<Result<Map<String, dynamic>>> createExpense(
-    Map<String, dynamic> input,
-  );
+  Future<Result<ExpenseRecord>> createExpense(ExpenseInput input);
 
-  Future<Result<Map<String, dynamic>>> updateExpense(
-    String id,
-    Map<String, dynamic> input,
-  );
+  Future<Result<ExpenseRecord>> updateExpense(String id, ExpenseInput input);
 
-  Future<Result<void>> deleteExpense(String id);
-
-  Future<Result<List<Map<String, dynamic>>>> searchExpenses(String query);
+  Future<Result<List<ExpenseRecord>>> searchExpenses(String query);
 }

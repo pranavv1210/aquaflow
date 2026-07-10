@@ -32,5 +32,11 @@ class PartnerTankerInput extends Equatable {
   }
 
   @override
-  List<Object?> get props => <Object?>[ownerName, vehicleName, registrationNumber, phone, notes];
+  List<Object?> get props => <Object?>[
+    ownerName,
+    vehicleName,
+    registrationNumber,
+    phone,
+    notes,
+  ];
 }

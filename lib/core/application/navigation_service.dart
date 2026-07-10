@@ -120,4 +120,20 @@ class NavigationService {
   void goToEditExpenseCategory(BuildContext context, String expenseCategoryId) {
     context.go(AppRoutes.editExpenseCategoryPath(expenseCategoryId));
   }
+
+  void goToExpenses(BuildContext context) {
+    context.go(AppRoutes.expenses);
+  }
+
+  void goToExpenseForm(BuildContext context) {
+    context.go(AppRoutes.expenseForm);
+  }
+
+  void goToExpenseDetails(BuildContext context, String expenseId) {
+    context.go(AppRoutes.expenseDetailsPath(expenseId));
+  }
+
+  void goToEditExpense(BuildContext context, String expenseId) {
+    context.go(AppRoutes.editExpensePath(expenseId));
+  }
 }

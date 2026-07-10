@@ -8,8 +8,16 @@ class ExpenseCategoryValidationService extends ApplicationService {
 
   Result<ExpenseCategoryInput> validateForSave(ExpenseCategoryInput input) {
     final normalized = input.trimmed();
-    if (normalized.categoryName.isEmpty) return const Failure<ExpenseCategoryInput>(ValidationFailure(message: 'Category name is required.'));
-    if (normalized.expenseType.isEmpty) return const Failure<ExpenseCategoryInput>(ValidationFailure(message: 'Expense type is required.'));
+    if (normalized.categoryName.isEmpty) {
+      return const Failure<ExpenseCategoryInput>(
+        ValidationFailure(message: 'Category name is required.'),
+      );
+    }
+    if (normalized.expenseType.isEmpty) {
+      return const Failure<ExpenseCategoryInput>(
+        ValidationFailure(message: 'Expense type is required.'),
+      );
+    }
     return Success<ExpenseCategoryInput>(normalized);
   }
 }

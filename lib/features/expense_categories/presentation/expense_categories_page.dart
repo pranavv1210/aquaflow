@@ -12,6 +12,14 @@ class ExpenseCategoriesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final nav = ref.watch(navigationServiceProvider);
+    ref.listen(expenseCategoryRealtimeProvider, (
+      _,
+      AsyncValue<List<Map<String, dynamic>>> next,
+    ) {
+      if (next.hasValue) {
+        ref.invalidate(expenseCategoryListProvider);
+      }
+    });
     return BaseMasterPage<ExpenseCategory>(
       title: 'Expense Categories',
       subtitle: 'Expense classification',

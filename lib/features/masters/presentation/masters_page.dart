@@ -67,6 +67,12 @@ class MastersPage extends StatelessWidget {
                   icon: Icons.category_outlined,
                   onTap: () => context.go(AppRoutes.expenseCategories),
                 ),
+                ActionTile(
+                  title: 'Expenses',
+                  subtitle: 'Business spending and vehicle expenses',
+                  icon: Icons.receipt_long_outlined,
+                  onTap: () => context.go(AppRoutes.expenses),
+                ),
               ],
             ),
           ),

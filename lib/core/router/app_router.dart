@@ -11,6 +11,9 @@ import '../../features/drivers/presentation/drivers_page.dart';
 import '../../features/expense_categories/presentation/expense_category_form_page.dart';
 import '../../features/expense_categories/presentation/expense_category_profile_page.dart';
 import '../../features/expense_categories/presentation/expense_categories_page.dart';
+import '../../features/expenses/presentation/expense_details_page.dart';
+import '../../features/expenses/presentation/expense_form_page.dart';
+import '../../features/expenses/presentation/expenses_page.dart';
 import '../../features/home/presentation/global_search_page.dart';
 import '../../features/home/presentation/home_shell.dart';
 import '../../features/home/presentation/home_page.dart';
@@ -296,6 +299,34 @@ final GoRouter appRouter = GoRouter(
           builder: (BuildContext context, GoRouterState state) {
             return ExpenseCategoryFormPage(
               expenseCategoryId: state.pathParameters['expenseCategoryId'],
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.expenses,
+          builder:
+              (BuildContext context, GoRouterState state) =>
+                  const ExpensesPage(),
+        ),
+        GoRoute(
+          path: '${AppRoutes.expenseDetails}/:expenseId',
+          builder: (BuildContext context, GoRouterState state) {
+            return ExpenseDetailsPage(
+              expenseId: state.pathParameters['expenseId']!,
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.expenseForm,
+          builder:
+              (BuildContext context, GoRouterState state) =>
+                  const ExpenseFormPage(),
+        ),
+        GoRoute(
+          path: '${AppRoutes.expenseForm}/:expenseId',
+          builder: (BuildContext context, GoRouterState state) {
+            return ExpenseFormPage(
+              expenseId: state.pathParameters['expenseId'],
             );
           },
         ),

@@ -29,6 +29,9 @@ class AppRoutes {
   static const String expenseCategories = '/expense-categories';
   static const String expenseCategoryProfile = '/expense-categories/profile';
   static const String expenseCategoryForm = '/expense-categories/form';
+  static const String expenses = '/expenses';
+  static const String expenseDetails = '/expenses/details';
+  static const String expenseForm = '/expenses/form';
   static const String partners = '/partners';
   static const String pendingPayments = '/payments/pending';
   static const String globalSearch = '/search';
@@ -89,6 +92,14 @@ class AppRoutes {
 
   static String editExpenseCategoryPath(String expenseCategoryId) {
     return '$expenseCategoryForm/$expenseCategoryId';
+  }
+
+  static String expenseDetailsPath(String expenseId) {
+    return '$expenseDetails/$expenseId';
+  }
+
+  static String editExpensePath(String expenseId) {
+    return '$expenseForm/$expenseId';
   }
 
   static String orderDetailsPath(String orderId) {

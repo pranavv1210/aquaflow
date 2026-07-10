@@ -12,6 +12,14 @@ class PartnerTankersPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final nav = ref.watch(navigationServiceProvider);
+    ref.listen(partnerTankerRealtimeProvider, (
+      _,
+      AsyncValue<List<Map<String, dynamic>>> next,
+    ) {
+      if (next.hasValue) {
+        ref.invalidate(partnerTankerListProvider);
+      }
+    });
     return BaseMasterPage<PartnerTanker>(
       title: 'Partner Tankers',
       subtitle: 'External partner vehicles',

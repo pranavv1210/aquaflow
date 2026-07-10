@@ -32,16 +32,43 @@ class ExpenseCategoryDto extends Equatable {
   final DateTime updatedAt;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'id': id, 'category_name': categoryName, 'expense_type': expenseType,
-    'description': description, 'is_active': isActive,
+    'id': id,
+    'category_name': categoryName,
+    'expense_type': expenseType,
+    'description': description,
+    'is_active': isActive,
     'created_at': createdAt.toUtc().toIso8601String(),
     'updated_at': updatedAt.toUtc().toIso8601String(),
   };
 
-  ExpenseCategoryDto copyWith({String? id, String? categoryName, String? expenseType, String? description, bool? isActive, DateTime? createdAt, DateTime? updatedAt}) {
-    return ExpenseCategoryDto(id: id ?? this.id, categoryName: categoryName ?? this.categoryName, expenseType: expenseType ?? this.expenseType, description: description ?? this.description, isActive: isActive ?? this.isActive, createdAt: createdAt ?? this.createdAt, updatedAt: updatedAt ?? this.updatedAt);
+  ExpenseCategoryDto copyWith({
+    String? id,
+    String? categoryName,
+    String? expenseType,
+    String? description,
+    bool? isActive,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return ExpenseCategoryDto(
+      id: id ?? this.id,
+      categoryName: categoryName ?? this.categoryName,
+      expenseType: expenseType ?? this.expenseType,
+      description: description ?? this.description,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
   }
 
   @override
-  List<Object?> get props => <Object?>[id, categoryName, expenseType, description, isActive, createdAt, updatedAt];
+  List<Object?> get props => <Object?>[
+    id,
+    categoryName,
+    expenseType,
+    description,
+    isActive,
+    createdAt,
+    updatedAt,
+  ];
 }
