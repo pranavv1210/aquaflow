@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import sys
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from pathlib import Path
+from time import perf_counter
+from uuid import uuid4
 from typing import Any, Iterable
 
 import pandas as pd
@@ -34,6 +37,7 @@ EXPENSE_CATEGORY_MAP = {
 @dataclass
 class TableResult:
     table_name: str
+    planned: int = 0
     imported: int = 0
     reused: int = 0
     skipped: int = 0
@@ -46,6 +50,8 @@ class TableResult:
 class MigrationReport:
     workbook_path: str
     sheet_names: list[str]
+    dry_run: bool = False
+    execution_seconds: float = 0.0
     locations: TableResult = field(default_factory=lambda: TableResult("locations"))
     water_points: TableResult = field(default_factory=lambda: TableResult("water_points"))
     customers: TableResult = field(default_factory=lambda: TableResult("customers"))
@@ -58,6 +64,7 @@ class MigrationReport:
     skipped_rows: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
     verification_counts: dict[str, int] = field(default_factory=dict)
+    summary: dict[str, int] = field(default_factory=dict)
 
     def add_warning(self, message: str) -> None:
         self.warnings.append(message)
@@ -72,11 +79,27 @@ class MigrationReport:
         sections = [
             "# AquaFlow Historical Import Report",
             "",
+            "## Mode",
+            f"- {'Dry Run' if self.dry_run else 'Live Import'}",
+            f"- Execution Time: {self.execution_seconds:.2f} seconds",
+            "",
             "## Workbook",
             f"- Source: `{self.workbook_path}`",
             f"- Sheets: {', '.join(f'`{sheet}`' for sheet in self.sheet_names)}",
             "",
+            "## Summary",
+            f"- Rows: {self.summary.get('rows', 0)}",
+            f"- Customers detected: {self.summary.get('customers_detected', 0)}",
+            f"- Locations detected: {self.summary.get('locations_detected', 0)}",
+            f"- Water Points detected: {self.summary.get('water_points_detected', 0)}",
+            f"- Drivers detected: {self.summary.get('drivers_detected', 0)}",
+            f"- Vehicles detected: {self.summary.get('vehicles_detected', 0)}",
+            f"- Orders detected: {self.summary.get('orders_detected', 0)}",
+            f"- Expenses detected: {self.summary.get('expenses_detected', 0)}",
+            "",
             "## Imported Totals",
+            f"- Rows Imported: {self.summary.get('rows_imported', 0)}",
+            f"- Rows Skipped: {self.summary.get('rows_skipped', 0)}",
             f"- Locations Imported: {self.locations.imported}",
             f"- Water Points Imported: {self.water_points.imported}",
             f"- Customers Imported: {self.customers.imported}",
@@ -113,6 +136,16 @@ class MigrationReport:
 
         sections.extend([
             "",
+            "## Reasons",
+        ])
+        reason_lines = self.skipped_rows + self.errors
+        if reason_lines:
+            sections.extend(f"- {reason}" for reason in reason_lines)
+        else:
+            sections.append("- None")
+
+        sections.extend([
+            "",
             "## Verification Results",
         ])
         if self.verification_counts:
@@ -126,6 +159,7 @@ class MigrationReport:
 
 def main() -> int:
     args = parse_args()
+    started_at = perf_counter()
     load_dotenv(args.env_file)
 
     workbook_path = Path(args.workbook).expanduser().resolve()
@@ -134,6 +168,7 @@ def main() -> int:
         return 1
 
     report_path = Path(args.report).expanduser().resolve()
+    dry_run = bool(args.dry_run)
     supabase_url = os.getenv("SUPABASE_URL", "").strip()
     service_role_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
     anon_key = os.getenv("SUPABASE_ANON_KEY", "").strip()
@@ -145,12 +180,11 @@ def main() -> int:
     if service_role_key:
         supabase_key = service_role_key
         print("Using SUPABASE_SERVICE_ROLE_KEY from .env")
-    elif anon_key:
+    elif dry_run and anon_key:
         supabase_key = anon_key
-        print("SUPABASE_SERVICE_ROLE_KEY is missing; falling back to SUPABASE_ANON_KEY.")
-        print("Writes may fail if the anon key does not have insert permissions.")
+        print("Dry run: using SUPABASE_ANON_KEY because service role key is missing.")
     else:
-        print("SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY is required.", file=sys.stderr)
+        print("SUPABASE_SERVICE_ROLE_KEY is required for live imports, and dry-run needs SUPABASE_ANON_KEY for FK resolution.", file=sys.stderr)
         return 1
 
     print("Reading workbook...")
@@ -159,37 +193,44 @@ def main() -> int:
 
     data_rows = read_data_sheet(workbook_path)
     customer_reference = read_customer_reference(workbook_path)
+    summary = build_workbook_summary(data_rows, customer_reference)
 
     print(f"Loaded {len(data_rows)} historical rows from Data sheet")
     print(f"Loaded {len(customer_reference)} customer reference names")
+    print_summary(workbook_path, summary)
 
-    client = create_client(supabase_url, supabase_key)
-    report = MigrationReport(str(workbook_path), sheet_names)
+    client = create_client(supabase_url, supabase_key) if supabase_key else None
+    report = MigrationReport(str(workbook_path), sheet_names, dry_run=dry_run, summary=summary)
 
-    existing = load_existing_records(client)
+    existing = load_existing_records(client) if client else empty_existing_records()
 
     print("Importing Locations...")
-    location_map = import_locations(client, data_rows, existing, report)
+    location_map = import_locations(client, data_rows, existing, report, dry_run=dry_run)
     print(f"Imported {report.locations.imported} Locations")
+    print("100%")
 
     print("Importing Water Points...")
-    water_point_map = import_water_points(client, data_rows, existing, report)
+    water_point_map = import_water_points(client, data_rows, existing, report, dry_run=dry_run)
     print(f"Imported {report.water_points.imported} Water Points")
+    print("100%")
 
     print("Importing Customers...")
-    customer_map = import_customers(client, data_rows, customer_reference, existing, location_map, report)
+    customer_map = import_customers(client, data_rows, customer_reference, existing, location_map, report, dry_run=dry_run)
     print(f"Imported {report.customers.imported} Customers")
+    print("100%")
 
     print("Importing Drivers...")
-    driver_map = import_drivers(client, data_rows, existing, report)
+    driver_map = import_drivers(client, data_rows, existing, report, dry_run=dry_run)
     print(f"Imported {report.drivers.imported} Drivers")
+    print("100%")
 
     print("Importing Vehicles...")
-    vehicle_map = import_vehicles(client, data_rows, existing, report)
+    vehicle_map = import_vehicles(client, data_rows, existing, report, dry_run=dry_run)
     print(f"Imported {report.vehicles.imported} Vehicles")
+    print("100%")
 
     print("Ensuring Expense Categories...")
-    expense_category_map = ensure_expense_categories(client)
+    expense_category_map = ensure_expense_categories(client, dry_run=dry_run)
 
     print("Importing Orders...")
     import_orders(
@@ -202,8 +243,10 @@ def main() -> int:
         vehicle_map=vehicle_map,
         driver_map=driver_map,
         existing=existing,
+        dry_run=dry_run,
     )
     print(f"Imported {report.orders.imported} Orders")
+    print("100%")
 
     print("Importing Expenses...")
     import_expenses(
@@ -214,20 +257,36 @@ def main() -> int:
         driver_map=driver_map,
         expense_category_map=expense_category_map,
         existing=existing,
+        dry_run=dry_run,
     )
     print(f"Imported {report.expenses.imported} Expenses")
 
-    print("Verifying counts...")
-    report.verification_counts = verify_counts(client)
-    for key, value in report.verification_counts.items():
-        print(f"{key}: {value}")
+    if not dry_run and client is not None:
+        print("Verifying counts...")
+        report.verification_counts = verify_counts(client)
+        for key, value in report.verification_counts.items():
+            print(f"{key}: {value}")
+    else:
+        print("Dry run complete; skipping Supabase verification counts.")
 
+    report.execution_seconds = perf_counter() - started_at
+    report.summary["rows_imported"] = report.locations.imported + report.water_points.imported + report.customers.imported + report.drivers.imported + report.vehicles.imported + report.orders.imported + report.expenses.imported
+    report.summary["rows_skipped"] = len(report.skipped_rows)
     report_text = report.to_markdown()
     report_path.write_text(report_text, encoding="utf-8")
     print(f"Wrote migration report to {report_path}")
-    print("Import Complete")
+    if report.errors:
+        status = "Import Failed"
+        exit_code = 1
+    elif report.warnings or report.skipped_rows:
+        status = "Import Completed With Warnings"
+        exit_code = 0
+    else:
+        status = "Import Successful"
+        exit_code = 0
 
-    return 0
+    print(status)
+    return exit_code
 
 
 def parse_args() -> argparse.Namespace:
@@ -235,6 +294,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--workbook", default=str(DEFAULT_WORKBOOK), help="Path to the Excel workbook.")
     parser.add_argument("--report", default=str(DEFAULT_REPORT), help="Path to write the migration report.")
     parser.add_argument("--env-file", default=".env", help="Path to the dotenv file.")
+    parser.add_argument("--dry-run", action="store_true", help="Validate and preview the import without writing to Supabase.")
     return parser.parse_args()
 
 
@@ -262,6 +322,57 @@ def read_customer_reference(workbook_path: Path) -> list[str]:
         if name and name not in names:
             names.append(name)
     return names
+
+
+def build_workbook_summary(data_rows: list[dict[str, Any]], customer_reference: list[str]) -> dict[str, int]:
+    return {
+        "rows": len(data_rows),
+        "customers_detected": len(collect_unique_display_names(data_rows, "Customer")),
+        "locations_detected": len(collect_unique_display_names(data_rows, "Location")),
+        "water_points_detected": len(collect_unique_display_names(data_rows, "Water point")),
+        "drivers_detected": len(collect_unique_display_names(data_rows, "Customer delivery")),
+        "vehicles_detected": len(collect_unique_display_names(data_rows, "Vehicle")),
+        "orders_detected": len(data_rows),
+        "expenses_detected": count_expense_rows(data_rows),
+        "customer_reference_rows": len(customer_reference),
+    }
+
+
+def print_summary(workbook_path: Path, summary: dict[str, int]) -> None:
+    print("=================================")
+    print("AquaFlow Historical Import")
+    print("=================================")
+    print(f"Workbook: {workbook_path.name}")
+    print(f"Rows: {summary.get('rows', 0)}")
+    print(f"Customers detected: {summary.get('customers_detected', 0)}")
+    print(f"Locations detected: {summary.get('locations_detected', 0)}")
+    print(f"Water Points detected: {summary.get('water_points_detected', 0)}")
+    print(f"Drivers detected: {summary.get('drivers_detected', 0)}")
+    print(f"Vehicles detected: {summary.get('vehicles_detected', 0)}")
+    print(f"Orders detected: {summary.get('orders_detected', 0)}")
+    print(f"Expenses detected: {summary.get('expenses_detected', 0)}")
+
+
+def count_expense_rows(data_rows: list[dict[str, Any]]) -> int:
+    count = 0
+    for row in data_rows:
+        if any(not is_blank(row.get(column)) for column in ("Diesel Expenses", "Driver Expenses", "Police", "Vehicle Service and Expenses")):
+            count += 1
+    return count
+
+
+def empty_existing_records() -> dict[str, dict[str, Any]]:
+    return {
+        "locations": {},
+        "water_points": {},
+        "customers": {},
+        "drivers": {},
+        "vehicles": {},
+        "partner_tankers": {},
+        "expense_categories": {},
+        "orders": {},
+        "expenses": {},
+    }
 
 
 def load_existing_records(client: Client) -> dict[str, dict[str, Any]]:
@@ -312,7 +423,7 @@ def index_by_signature(rows: Iterable[dict[str, Any]], table_type: str) -> dict[
     return indexed
 
 
-def import_locations(client: Client, data_rows: list[dict[str, Any]], existing: dict[str, dict[str, Any]], report: MigrationReport) -> dict[str, str]:
+def import_locations(client: Client | None, data_rows: list[dict[str, Any]], existing: dict[str, dict[str, Any]], report: MigrationReport, dry_run: bool = False) -> dict[str, str]:
     source_names = collect_unique_display_names(data_rows, "Location")
     new_rows: list[dict[str, Any]] = []
     location_map: dict[str, str] = {}
@@ -324,16 +435,17 @@ def import_locations(client: Client, data_rows: list[dict[str, Any]], existing: 
             location_map[key] = existing_row["id"]
             report.locations.reused += 1
             continue
-        new_rows.append({"name": name, "notes": None, "is_active": True})
+        new_rows.append({"id": str(uuid4()), "name": name, "notes": None, "is_active": True})
 
-    inserted = insert_rows(client, "locations", new_rows)
+    report.locations.planned = len(new_rows)
+    inserted = insert_rows(client, "locations", new_rows, report, dry_run=dry_run)
     for row in inserted:
         location_map[normalize_name(row["name"])] = row["id"]
     report.locations.imported += len(inserted)
     return location_map
 
 
-def import_water_points(client: Client, data_rows: list[dict[str, Any]], existing: dict[str, dict[str, Any]], report: MigrationReport) -> dict[str, str]:
+def import_water_points(client: Client | None, data_rows: list[dict[str, Any]], existing: dict[str, dict[str, Any]], report: MigrationReport, dry_run: bool = False) -> dict[str, str]:
     source_names = collect_unique_display_names(data_rows, "Water point")
     new_rows: list[dict[str, Any]] = []
     water_point_map: dict[str, str] = {}
@@ -345,9 +457,10 @@ def import_water_points(client: Client, data_rows: list[dict[str, Any]], existin
             water_point_map[key] = existing_row["id"]
             report.water_points.reused += 1
             continue
-        new_rows.append({"name": name, "location_id": None, "notes": None, "is_active": True})
+        new_rows.append({"id": str(uuid4()), "name": name, "location_id": None, "notes": None, "is_active": True})
 
-    inserted = insert_rows(client, "water_points", new_rows)
+    report.water_points.planned = len(new_rows)
+    inserted = insert_rows(client, "water_points", new_rows, report, dry_run=dry_run)
     for row in inserted:
         water_point_map[normalize_name(row["name"])] = row["id"]
     report.water_points.imported += len(inserted)
@@ -355,12 +468,13 @@ def import_water_points(client: Client, data_rows: list[dict[str, Any]], existin
 
 
 def import_customers(
-    client: Client,
+    client: Client | None,
     data_rows: list[dict[str, Any]],
     customer_reference: list[str],
     existing: dict[str, dict[str, Any]],
     location_map: dict[str, str],
     report: MigrationReport,
+    dry_run: bool = False,
 ) -> dict[str, str]:
     customer_locations = build_customer_location_candidates(data_rows)
     source_names = collect_unique_display_names(data_rows, "Customer")
@@ -387,6 +501,7 @@ def import_customers(
 
         new_rows.append(
             {
+                "id": str(uuid4()),
                 "display_name": name,
                 "phone": None,
                 "default_location_id": default_location_id,
@@ -396,14 +511,15 @@ def import_customers(
             }
         )
 
-    inserted = insert_rows(client, "customers", new_rows)
+    report.customers.planned = len(new_rows)
+    inserted = insert_rows(client, "customers", new_rows, report, dry_run=dry_run)
     for row in inserted:
         customer_map[normalize_name(row["display_name"])] = row["id"]
     report.customers.imported += len(inserted)
     return customer_map
 
 
-def import_drivers(client: Client, data_rows: list[dict[str, Any]], existing: dict[str, dict[str, Any]], report: MigrationReport) -> dict[str, str]:
+def import_drivers(client: Client | None, data_rows: list[dict[str, Any]], existing: dict[str, dict[str, Any]], report: MigrationReport, dry_run: bool = False) -> dict[str, str]:
     source_names = collect_unique_display_names(data_rows, "Customer delivery")
     new_rows: list[dict[str, Any]] = []
     driver_map: dict[str, str] = {}
@@ -415,16 +531,17 @@ def import_drivers(client: Client, data_rows: list[dict[str, Any]], existing: di
             driver_map[key] = existing_row["id"]
             report.drivers.reused += 1
             continue
-        new_rows.append({"driver_name": name, "phone": None, "status": "available", "notes": None, "is_active": True})
+        new_rows.append({"id": str(uuid4()), "driver_name": name, "phone": None, "status": "available", "notes": None, "is_active": True})
 
-    inserted = insert_rows(client, "drivers", new_rows)
+    report.drivers.planned = len(new_rows)
+    inserted = insert_rows(client, "drivers", new_rows, report, dry_run=dry_run)
     for row in inserted:
         driver_map[normalize_name(row["driver_name"])] = row["id"]
     report.drivers.imported += len(inserted)
     return driver_map
 
 
-def import_vehicles(client: Client, data_rows: list[dict[str, Any]], existing: dict[str, dict[str, Any]], report: MigrationReport) -> dict[str, str]:
+def import_vehicles(client: Client | None, data_rows: list[dict[str, Any]], existing: dict[str, dict[str, Any]], report: MigrationReport, dry_run: bool = False) -> dict[str, str]:
     source_names = collect_unique_display_names(data_rows, "Vehicle")
     type_lookup = {"tractor": "tractor", "canter": "canter"}
     placeholder_reg = {"tractor": "UPDATE-TRACTOR", "canter": "UPDATE-CANTER"}
@@ -441,6 +558,7 @@ def import_vehicles(client: Client, data_rows: list[dict[str, Any]], existing: d
             continue
         new_rows.append(
             {
+                "id": str(uuid4()),
                 "vehicle_name": name,
                 "registration_number": placeholder_reg.get(key, f"UPDATE-{name.upper().replace(' ', '-')[:20]}") if key in type_lookup else f"UPDATE-{name.upper().replace(' ', '-')[:20]}",
                 "vehicle_type": vehicle_type,
@@ -450,14 +568,15 @@ def import_vehicles(client: Client, data_rows: list[dict[str, Any]], existing: d
             }
         )
 
-    inserted = insert_rows(client, "vehicles", new_rows)
+    report.vehicles.planned = len(new_rows)
+    inserted = insert_rows(client, "vehicles", new_rows, report, dry_run=dry_run)
     for row in inserted:
         vehicle_map[normalize_name(row["vehicle_name"])] = row["id"]
     report.vehicles.imported += len(inserted)
     return vehicle_map
 
 
-def ensure_expense_categories(client: Client) -> dict[str, str]:
+def ensure_expense_categories(client: Client | None, dry_run: bool = False) -> dict[str, str]:
     payload = [
         {"category_name": "Diesel", "expense_type": "diesel", "description": "Fuel expenses for tankers and business vehicles.", "is_active": True},
         {"category_name": "Driver Payment", "expense_type": "driver_payment", "description": "Payments made to drivers.", "is_active": True},
@@ -467,13 +586,18 @@ def ensure_expense_categories(client: Client) -> dict[str, str]:
         {"category_name": "Tyre", "expense_type": "tyre", "description": "Tyre purchase, puncture, and tyre repair expenses.", "is_active": True},
         {"category_name": "Other", "expense_type": "other", "description": "Other business expenses.", "is_active": True},
     ]
-    response = client.table("expense_categories").upsert(payload, on_conflict="expense_type").execute()
-    rows = list(response.data or [])
+    if dry_run or client is None:
+        for p in payload:
+            p["id"] = str(uuid4())
+        rows = payload
+    else:
+        response = client.table("expense_categories").upsert(payload, on_conflict="expense_type").execute()
+        rows = list(response.data or [])
     return {normalize_name(row["expense_type"]): row["id"] for row in rows}
 
 
 def import_orders(
-    client: Client,
+    client: Client | None,
     data_rows: list[dict[str, Any]],
     report: MigrationReport,
     customer_map: dict[str, str],
@@ -482,6 +606,7 @@ def import_orders(
     vehicle_map: dict[str, str],
     driver_map: dict[str, str],
     existing: dict[str, dict[str, Any]],
+    dry_run: bool = False,
 ) -> None:
     customer_defaults = build_customer_defaults(data_rows, "Customer", "Location")
     customer_water_defaults = build_customer_defaults(data_rows, "Customer", "Water point")
@@ -489,8 +614,11 @@ def import_orders(
 
     payload: list[dict[str, Any]] = []
     seen_signatures = set(existing["orders"].keys())
+    checkpoints = {25, 50, 75, 100}
+    next_checkpoint_index = 0
+    total_rows = max(len(data_rows), 1)
 
-    for row in data_rows:
+    for index, row in enumerate(data_rows, start=1):
         row_number = row["row_number"]
         customer_name = canonical_display(row.get("Customer"))
         location_name = canonical_display(row.get("Location"))
@@ -504,12 +632,12 @@ def import_orders(
             amount_source = "Water Sales"
 
         if amount is None:
-            report.add_skipped_row(f"Row {row_number}: amount missing in both Cost and Water Sales")
+            report.add_warning(f"Row {row_number}: amount missing in both Cost and Water Sales")
             report.orders.skipped += 1
             continue
 
         if not customer_name or normalize_name(customer_name) not in customer_map:
-            report.add_skipped_row(f"Row {row_number}: customer could not be resolved")
+            report.add_warning(f"Row {row_number}: customer could not be resolved")
             report.orders.skipped += 1
             continue
 
@@ -531,7 +659,7 @@ def import_orders(
                 report.add_warning(f"Row {row_number}: driver inferred from customer default")
 
         if is_blank(location_name) or is_blank(water_point_name) or is_blank(vehicle_name) or is_blank(driver_name):
-            report.add_skipped_row(
+            report.add_warning(
                 f"Row {row_number}: required reference missing after safe inference"
             )
             report.orders.skipped += 1
@@ -544,7 +672,7 @@ def import_orders(
         customer_id = customer_map.get(customer_key)
 
         if not all([customer_id, location_id, water_point_id, vehicle_id, driver_id]):
-            report.add_skipped_row(f"Row {row_number}: one or more foreign keys could not be resolved")
+            report.add_warning(f"Row {row_number}: one or more foreign keys could not be resolved")
             report.orders.skipped += 1
             continue
 
@@ -577,6 +705,7 @@ def import_orders(
             "payment_status": payment_status,
             "delivery_status": "delivered",
             "remarks": remarks,
+            "id": str(uuid4()),
         }
         signature = build_order_signature(order_row)
         if signature in seen_signatures:
@@ -587,18 +716,25 @@ def import_orders(
             report.add_warning(f"Row {row_number}: amount sourced from Water Sales because Cost was empty")
         payload.append(order_row)
 
-    inserted = insert_rows(client, "orders", payload)
+        percent = int((index / total_rows) * 100)
+        while next_checkpoint_index < len(sorted(checkpoints)) and percent >= sorted(checkpoints)[next_checkpoint_index]:
+            print(f"{sorted(checkpoints)[next_checkpoint_index]}%")
+            next_checkpoint_index += 1
+
+    report.orders.planned = len(payload)
+    inserted = insert_rows(client, "orders", payload, report, dry_run=dry_run)
     report.orders.imported += len(inserted)
 
 
 def import_expenses(
-    client: Client,
+    client: Client | None,
     data_rows: list[dict[str, Any]],
     report: MigrationReport,
     vehicle_map: dict[str, str],
     driver_map: dict[str, str],
     expense_category_map: dict[str, str],
     existing: dict[str, dict[str, Any]],
+    dry_run: bool = False,
 ) -> None:
     payload: list[dict[str, Any]] = []
     seen_signatures = set(existing["expenses"].keys())
@@ -628,6 +764,7 @@ def import_expenses(
                 continue
 
             expense_row = {
+                "id": str(uuid4()),
                 "expense_date": to_date(row.get("Date")),
                 "vehicle_id": vehicle_id,
                 "driver_id": driver_id,
@@ -642,27 +779,62 @@ def import_expenses(
             seen_signatures.add(signature)
             payload.append(expense_row)
 
-    inserted = insert_rows(client, "expenses", payload)
+    report.expenses.planned = len(payload)
+    inserted = insert_rows(client, "expenses", payload, report, dry_run=dry_run)
     report.expenses.imported += len(inserted)
+    if payload:
+        print("100%")
 
 
-def insert_rows(client: Client, table_name: str, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def insert_rows(
+    client: Client | None,
+    table_name: str,
+    rows: list[dict[str, Any]],
+    report: MigrationReport,
+    dry_run: bool = False,
+) -> list[dict[str, Any]]:
     if not rows:
         return []
 
+    if dry_run or client is None:
+        print(f"Would insert {len(rows)} rows into {table_name}...")
+        preview_rows(table_name, rows)
+        return rows
+
     inserted_rows: list[dict[str, Any]] = []
+    for start in range(0, len(rows), CHUNK_SIZE):
+        batch = rows[start : start + CHUNK_SIZE]
+        inserted_rows.extend(insert_batch_with_fallback(client, table_name, batch, report))
+    return inserted_rows
+
+
+def insert_batch_with_fallback(
+    client: Client,
+    table_name: str,
+    rows: list[dict[str, Any]],
+    report: MigrationReport,
+) -> list[dict[str, Any]]:
+    if not rows:
+        return []
+    if len(rows) == 1:
+        row = rows[0]
+        try:
+            response = client.table(table_name).insert(row).execute()
+            return list(response.data or [row])
+        except Exception as error:
+            message = f"{table_name[:-1].capitalize()} row skipped (id={row.get('id')}): {error}"
+            report.add_skipped_row(message)
+            report.add_warning(message)
+            return []
+
     try:
-        for start in range(0, len(rows), CHUNK_SIZE):
-            batch = rows[start : start + CHUNK_SIZE]
-            response = client.table(table_name).insert(batch).execute()
-            inserted_rows.extend(list(response.data or []))
-        return inserted_rows
+        response = client.table(table_name).insert(rows).execute()
+        return list(response.data or rows)
     except Exception:
-        if inserted_rows:
-            rollback_ids = [row["id"] for row in inserted_rows if row.get("id")]
-            if rollback_ids:
-                client.table(table_name).delete().in_("id", rollback_ids).execute()
-        raise
+        midpoint = len(rows) // 2
+        left = insert_batch_with_fallback(client, table_name, rows[:midpoint], report)
+        right = insert_batch_with_fallback(client, table_name, rows[midpoint:], report)
+        return left + right
 
 
 def verify_counts(client: Client) -> dict[str, int]:
@@ -672,6 +844,11 @@ def verify_counts(client: Client) -> dict[str, int]:
         response = client.table(table).select("id").execute()
         counts[table] = len(response.data or [])
     return counts
+
+
+def preview_rows(table_name: str, rows: list[dict[str, Any]]) -> None:
+    for row in rows:
+        print(f"[{table_name}] {json.dumps(row, default=str, sort_keys=True)}")
 
 
 def collect_unique_display_names(data_rows: list[dict[str, Any]], column_name: str) -> list[str]:
