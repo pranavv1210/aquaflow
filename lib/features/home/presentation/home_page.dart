@@ -15,6 +15,7 @@ import '../../../core/shared/widgets/page_header.dart';
 import '../../../core/shared/widgets/section_title.dart';
 import '../../../core/shared/widgets/skeleton_loader.dart';
 import '../../../core/shared/widgets/status_chip.dart';
+import '../../../core/shared/widgets/timed_loading_view.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../analytics/application/analytics_providers.dart';
 import '../../analytics/application/business_metrics.dart';
@@ -35,9 +36,18 @@ class HomePage extends ConsumerWidget {
           () => AppScreen(
             children: <Widget>[
               PageHeader(title: _greeting(), subtitle: "Today's Business"),
-              SkeletonLoader(height: 220),
-              SkeletonLoader(height: 180),
-              SkeletonLoader(height: 140),
+              TimedLoadingView(
+                onRetry: () => ref.invalidate(dashboardMetricsProvider),
+                loading: const Column(
+                  children: <Widget>[
+                    SkeletonLoader(height: 220),
+                    SizedBox(height: AppSpacing.md),
+                    SkeletonLoader(height: 180),
+                    SizedBox(height: AppSpacing.md),
+                    SkeletonLoader(height: 140),
+                  ],
+                ),
+              ),
             ],
           ),
       error:
@@ -182,15 +192,15 @@ class HomePage extends ConsumerWidget {
   String _greeting() {
     final hour = DateTime.now().hour;
     if (hour >= 5 && hour < 12) {
-      return 'Good Morning, Harish 👋';
+      return 'Good Morning, Harish \u{1F44B}';
     }
     if (hour >= 12 && hour < 17) {
-      return 'Good Afternoon, Harish ☀️';
+      return 'Good Afternoon, Harish \u{2600}\u{FE0F}';
     }
     if (hour >= 17 && hour < 21) {
-      return 'Good Evening, Harish 🌇';
+      return 'Good Evening, Harish \u{1F307}';
     }
-    return 'Good Night, Harish 🌙';
+    return 'Good Night, Harish \u{1F319}';
   }
 }
 

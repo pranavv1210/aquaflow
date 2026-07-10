@@ -13,6 +13,7 @@ import '../../core/shared/widgets/order_card.dart';
 import '../../core/shared/widgets/page_header.dart';
 import '../../core/shared/widgets/search_field.dart';
 import '../../core/shared/widgets/skeleton_loader.dart';
+import '../../core/shared/widgets/timed_loading_view.dart';
 import '../../core/theme/app_spacing.dart';
 import 'application/order_providers.dart';
 import 'domain/order_record.dart';
@@ -151,16 +152,25 @@ class _OrdersPageState extends ConsumerState<OrdersPage> {
   }
 
   Widget _buildLoading() {
-    return const AppScreen(
+    return AppScreen(
       children: <Widget>[
-        PageHeader(title: 'Orders', subtitle: 'Loading...'),
-        SearchField(label: 'Search orders'),
-        AquaFilterChipBar(
+        const PageHeader(title: 'Orders', subtitle: 'Loading...'),
+        const SearchField(label: 'Search orders'),
+        const AquaFilterChipBar(
           labels: <String>['All', 'Unpaid', 'Delivered', 'Paid'],
         ),
-        SkeletonLoader(height: 156),
-        SkeletonLoader(height: 156),
-        SkeletonLoader(height: 156),
+        TimedLoadingView(
+          onRetry: _invalidateCurrentList,
+          loading: const Column(
+            children: <Widget>[
+              SkeletonLoader(height: 156),
+              SizedBox(height: AppSpacing.md),
+              SkeletonLoader(height: 156),
+              SizedBox(height: AppSpacing.md),
+              SkeletonLoader(height: 156),
+            ],
+          ),
+        ),
       ],
     );
   }

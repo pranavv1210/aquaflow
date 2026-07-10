@@ -9,6 +9,7 @@ import '../../../core/shared/widgets/error_state_widget.dart';
 import '../../../core/shared/widgets/metric_charts.dart';
 import '../../../core/shared/widgets/page_header.dart';
 import '../../../core/shared/widgets/skeleton_loader.dart';
+import '../../../core/shared/widgets/timed_loading_view.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../expenses/application/expense_providers.dart';
 import '../../orders/application/order_providers.dart';
@@ -36,12 +37,21 @@ class AnalyticsPage extends ConsumerWidget {
     final metrics = ref.watch(analyticsMetricsProvider);
     return metrics.when(
       loading:
-          () => const AppScreen(
+          () => AppScreen(
             children: <Widget>[
-              PageHeader(title: 'Analytics', subtitle: 'Loading...'),
-              SkeletonLoader(height: 180),
-              SkeletonLoader(height: 220),
-              SkeletonLoader(height: 220),
+              const PageHeader(title: 'Analytics', subtitle: 'Loading...'),
+              TimedLoadingView(
+                onRetry: () => ref.invalidate(analyticsMetricsProvider),
+                loading: const Column(
+                  children: <Widget>[
+                    SkeletonLoader(height: 180),
+                    SizedBox(height: AppSpacing.md),
+                    SkeletonLoader(height: 220),
+                    SizedBox(height: AppSpacing.md),
+                    SkeletonLoader(height: 220),
+                  ],
+                ),
+              ),
             ],
           ),
       error:

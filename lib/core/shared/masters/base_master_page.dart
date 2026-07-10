@@ -9,6 +9,7 @@ import '../widgets/empty_state_widget.dart';
 import '../widgets/error_state_widget.dart';
 import '../widgets/page_header.dart';
 import '../widgets/search_field.dart';
+import '../widgets/timed_loading_view.dart';
 
 class BaseMasterPage<TItem> extends ConsumerStatefulWidget {
   const BaseMasterPage({
@@ -74,7 +75,11 @@ class _BaseMasterPageState<TItem> extends ConsumerState<BaseMasterPage<TItem>> {
           onChanged: _onSearchChanged,
         ),
         items.when(
-          loading: widget.buildLoading,
+          loading:
+              () => TimedLoadingView(
+                loading: widget.buildLoading(),
+                onRetry: _refresh,
+              ),
           error: (Object error, StackTrace stackTrace) {
             return ErrorStateWidget(
               title: 'Unable to load ${widget.title.toLowerCase()}',
