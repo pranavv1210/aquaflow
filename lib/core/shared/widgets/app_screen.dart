@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' as cupertino;
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../theme/app_colors.dart';
@@ -96,7 +96,7 @@ class _AppScreenState extends State<AppScreen> {
     if (widget.onRefresh != null) {
       sliverList = SliverMainAxisGroup(
         slivers: [
-          CupertinoSliverRefreshControl(
+          cupertino.CupertinoSliverRefreshControl(
             onRefresh: widget.onRefresh,
             builder: (context, refreshState, pulledExtent, refreshTriggerPullDistance, refreshIndicatorExtent) {
               return Center(
@@ -119,7 +119,7 @@ class _AppScreenState extends State<AppScreen> {
                   ),
                 ).animate(
                   onPlay: (controller) => controller.repeat(),
-                  target: refreshState == RefreshIndicatorMode.refresh ? 1 : 0,
+                  target: refreshState == cupertino.RefreshIndicatorMode.refresh ? 1 : 0,
                 ).scale(
                   begin: const Offset(1, 1),
                   end: const Offset(1.5, 1.5),

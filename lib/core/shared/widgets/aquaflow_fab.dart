@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../theme/app_design_tokens.dart';
+import '../../theme/app_colors.dart';
 import '../../theme/app_elevation.dart';
 import '../../theme/app_radius.dart';
 
@@ -21,27 +21,32 @@ class AquaFlowFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Tooltip(
       message: tooltip ?? '',
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.lg),
         child: BackdropFilter(
           filter: ImageFilter.blur(
-            sigmaX: AppBlur.medium,
-            sigmaY: AppBlur.medium,
+            sigmaX: 16,
+            sigmaY: 16,
           ),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              gradient: AppGradients.action(colorScheme.primary),
+              color: AppColors.ocean900.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(AppRadius.lg),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.42)),
-              boxShadow: AppElevation.medium,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.ocean900.withValues(alpha: 0.4),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
+                overlayColor: WidgetStateProperty.all(AppColors.aqua400.withValues(alpha: 0.2)),
                 onTap:
                     onPressed == null
                         ? null
@@ -51,7 +56,7 @@ class AquaFlowFab extends StatelessWidget {
                         },
                 child: SizedBox.square(
                   dimension: 58,
-                  child: Icon(icon, color: Colors.white, size: AppIconSizes.lg),
+                  child: Icon(icon, color: Colors.white, size: 24),
                 ),
               ),
             ),

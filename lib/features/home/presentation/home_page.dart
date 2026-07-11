@@ -6,7 +6,6 @@ import '../../../core/helpers/app_formatters.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/shared/widgets/action_tile.dart';
 import '../../../core/shared/widgets/app_screen.dart';
-import '../../../core/shared/widgets/dashboard_card.dart';
 import '../../../core/shared/widgets/empty_state_widget.dart';
 import '../../../core/shared/widgets/error_state_widget.dart';
 import '../../../core/shared/widgets/glass_card.dart';

@@ -7,31 +7,31 @@ import 'app_spacing.dart';
 class AppGradients {
   const AppGradients._();
 
-  static const LinearGradient screen = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: <Color>[AppColors.veryLightBlue, Colors.white, Color(0x14075985)],
-  );
-
   static LinearGradient glass(Color primary) {
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: <Color>[
-        Colors.white.withValues(alpha: 0.92),
-        Colors.white.withValues(alpha: 0.64),
-        primary.withValues(alpha: 0.06),
+        primary.withValues(alpha: 0.15),
+        primary.withValues(alpha: 0.05),
       ],
+      stops: const <double>[0, 1],
     );
   }
 
-  static LinearGradient action(Color primary) {
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: <Color>[primary, AppColors.aquaBlue],
-    );
-  }
+  static const LinearGradient hero = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: <Color>[AppColors.ocean900, AppColors.ocean600],
+    stops: <double>[0, 1],
+  );
+
+  static const LinearGradient accent = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: <Color>[AppColors.aqua400, AppColors.ocean600],
+    stops: <double>[0, 1],
+  );
 }
 
 class AppBlur {
