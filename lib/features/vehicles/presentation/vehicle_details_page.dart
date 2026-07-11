@@ -26,28 +26,27 @@ class VehicleDetailsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final vehicle = ref.watch(selectedVehicleProvider(vehicleId));
 
-    return vehicle.when(
-      loading:
-          () => const AppScreen(
-            children: <Widget>[
-              PageHeader(title: 'Vehicle Details', subtitle: 'Loading...'),
-              VehicleListSkeleton(),
-            ],
+    return switch (vehicle) {
+      AsyncData<Vehicle>(:final value) => _VehicleDetailsContent(
+        vehicle: value,
+      ),
+      AsyncError<Vehicle>(:final error) => AppScreen(
+        children: <Widget>[
+          const PageHeader(title: 'Vehicle Details', subtitle: 'Error'),
+          ErrorStateWidget(
+            title: 'Unable to load vehicle',
+            message: error.toString(),
+            onRetry: () => ref.invalidate(selectedVehicleProvider(vehicleId)),
           ),
-      error: (Object error, StackTrace stackTrace) {
-        return AppScreen(
-          children: <Widget>[
-            const PageHeader(title: 'Vehicle Details', subtitle: 'Error'),
-            ErrorStateWidget(
-              title: 'Unable to load vehicle',
-              message: error.toString(),
-              onRetry: () => ref.invalidate(selectedVehicleProvider(vehicleId)),
-            ),
-          ],
-        );
-      },
-      data: (Vehicle vehicle) => _VehicleDetailsContent(vehicle: vehicle),
-    );
+        ],
+      ),
+      _ => const AppScreen(
+        children: <Widget>[
+          PageHeader(title: 'Vehicle Details', subtitle: 'Loading...'),
+          VehicleListSkeleton(),
+        ],
+      ),
+    };
   }
 }
 

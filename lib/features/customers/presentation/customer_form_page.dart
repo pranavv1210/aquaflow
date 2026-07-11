@@ -52,34 +52,31 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
     }
 
     final customer = ref.watch(selectedCustomerProvider(widget.customerId!));
-    return customer.when(
-      loading:
-          () => const AppScreen(
-            children: <Widget>[
-              PageHeader(title: 'Edit Customer', subtitle: 'Loading...'),
-              CustomerListSkeleton(),
-            ],
-          ),
-      error: (Object error, StackTrace stackTrace) {
-        return AppScreen(
-          children: <Widget>[
-            const PageHeader(title: 'Edit Customer', subtitle: 'Error'),
-            ErrorStateWidget(
-              title: 'Unable to load customer',
-              message: error.toString(),
-              onRetry:
-                  () => ref.invalidate(
-                    selectedCustomerProvider(widget.customerId!),
-                  ),
-            ),
-          ],
-        );
-      },
-      data: (Customer customer) {
-        _populateOnce(customer);
+    return switch (customer) {
+      AsyncData<Customer>(:final value) => () {
+        _populateOnce(value);
         return _buildForm();
-      },
-    );
+      }(),
+      AsyncError<Customer>(:final error) => AppScreen(
+        children: <Widget>[
+          const PageHeader(title: 'Edit Customer', subtitle: 'Error'),
+          ErrorStateWidget(
+            title: 'Unable to load customer',
+            message: error.toString(),
+            onRetry:
+                () => ref.invalidate(
+                  selectedCustomerProvider(widget.customerId!),
+                ),
+          ),
+        ],
+      ),
+      _ => const AppScreen(
+        children: <Widget>[
+          PageHeader(title: 'Edit Customer', subtitle: 'Loading...'),
+          CustomerListSkeleton(),
+        ],
+      ),
+    };
   }
 
   Widget _buildForm() {

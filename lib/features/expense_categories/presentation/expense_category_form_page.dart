@@ -43,35 +43,31 @@ class _ExpenseCategoryFormPageState
     final ec = ref.watch(
       selectedExpenseCategoryProvider(widget.expenseCategoryId!),
     );
-    return ec.when(
-      loading:
-          () => const AppScreen(
-            children: [
-              PageHeader(title: 'Edit Category', subtitle: 'Loading...'),
-              ExpenseCategoryListSkeleton(),
-            ],
-          ),
-      error:
-          (e, s) => AppScreen(
-            children: [
-              const PageHeader(title: 'Edit Category', subtitle: 'Error'),
-              ErrorStateWidget(
-                title: 'Unable to load category',
-                message: e.toString(),
-                onRetry:
-                    () => ref.invalidate(
-                      selectedExpenseCategoryProvider(
-                        widget.expenseCategoryId!,
-                      ),
-                    ),
-              ),
-            ],
-          ),
-      data: (ExpenseCategory ec) {
-        _populateOnce(ec);
+    return switch (ec) {
+      AsyncData<ExpenseCategory>(:final value) => () {
+        _populateOnce(value);
         return _buildForm();
-      },
-    );
+      }(),
+      AsyncError<ExpenseCategory>(:final error) => AppScreen(
+        children: [
+          const PageHeader(title: 'Edit Category', subtitle: 'Error'),
+          ErrorStateWidget(
+            title: 'Unable to load category',
+            message: error.toString(),
+            onRetry:
+                () => ref.invalidate(
+                  selectedExpenseCategoryProvider(widget.expenseCategoryId!),
+                ),
+          ),
+        ],
+      ),
+      _ => const AppScreen(
+        children: [
+          PageHeader(title: 'Edit Category', subtitle: 'Loading...'),
+          ExpenseCategoryListSkeleton(),
+        ],
+      ),
+    };
   }
 
   Widget _buildForm() => BaseMasterForm(

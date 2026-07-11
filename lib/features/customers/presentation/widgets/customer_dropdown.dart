@@ -23,40 +23,59 @@ class CustomerDropdown extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final customers = ref.watch(customerListProvider);
 
-    return customers.when(
-      data: (List<Customer> items) {
-        final sorted = List<Customer>.of(items)..sort(
-          (Customer a, Customer b) => a.displayName.toLowerCase().compareTo(
-            b.displayName.toLowerCase(),
-          ),
+    return switch (customers) {
+      AsyncData<List<Customer>>(:final value) => _CustomerPickerField(
+        label: label,
+        value: this.value,
+        customers: value,
+        onChanged: onChanged,
+      ),
+      AsyncError<List<Customer>>(:final error) => ErrorStateWidget(
+        title: 'Unable to load customers',
+        message: error.toString(),
+        onRetry: () => ref.invalidate(customerListProvider),
+      ),
+      _ => const SkeletonLoader(height: 56),
+    };
+  }
+}
+
+class _CustomerPickerField extends StatelessWidget {
+  const _CustomerPickerField({
+    required this.label,
+    required this.customers,
+    this.value,
+    this.onChanged,
+  });
+
+  final String label;
+  final Customer? value;
+  final List<Customer> customers;
+  final ValueChanged<Customer?>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final sorted = List<Customer>.of(customers)..sort(
+      (Customer a, Customer b) =>
+          a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()),
+    );
+    return TextFormField(
+      initialValue: value?.displayName ?? '',
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: 'Search customer',
+        prefixIcon: const Icon(Icons.person_search_outlined),
+      ),
+      onTap: () async {
+        final selected = await showSearch<Customer?>(
+          context: context,
+          delegate: _CustomerSearchDelegate(sorted),
         );
-        return TextFormField(
-          initialValue: value?.displayName ?? '',
-          readOnly: true,
-          decoration: InputDecoration(
-            labelText: label,
-            hintText: 'Search customer',
-            prefixIcon: const Icon(Icons.person_search_outlined),
-          ),
-          onTap: () async {
-            final selected = await showSearch<Customer?>(
-              context: context,
-              delegate: _CustomerSearchDelegate(sorted),
-            );
-            if (selected != null) {
-              onChanged?.call(selected);
-            }
-          },
-        );
+        if (selected != null) {
+          onChanged?.call(selected);
+        }
       },
-      error: (Object error, StackTrace stackTrace) {
-        return ErrorStateWidget(
-          title: 'Unable to load customers',
-          message: error.toString(),
-          onRetry: () => ref.invalidate(customerListProvider),
-        );
-      },
-      loading: () => const SkeletonLoader(height: 56),
     );
   }
 }

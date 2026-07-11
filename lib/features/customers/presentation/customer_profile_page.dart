@@ -26,31 +26,27 @@ class CustomerProfilePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final customer = ref.watch(selectedCustomerProvider(customerId));
 
-    return customer.when(
-      loading:
-          () => const AppScreen(
-            children: <Widget>[
-              PageHeader(title: 'Customer Profile', subtitle: 'Loading...'),
-              CustomerListSkeleton(),
-            ],
+    return switch (customer) {
+      AsyncData<Customer>(:final value) => _CustomerProfileContent(
+        customer: value,
+      ),
+      AsyncError<Customer>(:final error) => AppScreen(
+        children: <Widget>[
+          const PageHeader(title: 'Customer Profile', subtitle: 'Error'),
+          ErrorStateWidget(
+            title: 'Unable to load customer',
+            message: error.toString(),
+            onRetry: () => ref.invalidate(selectedCustomerProvider(customerId)),
           ),
-      error: (Object error, StackTrace stackTrace) {
-        return AppScreen(
-          children: <Widget>[
-            const PageHeader(title: 'Customer Profile', subtitle: 'Error'),
-            ErrorStateWidget(
-              title: 'Unable to load customer',
-              message: error.toString(),
-              onRetry:
-                  () => ref.invalidate(selectedCustomerProvider(customerId)),
-            ),
-          ],
-        );
-      },
-      data: (Customer customer) {
-        return _CustomerProfileContent(customer: customer);
-      },
-    );
+        ],
+      ),
+      _ => const AppScreen(
+        children: <Widget>[
+          PageHeader(title: 'Customer Profile', subtitle: 'Loading...'),
+          CustomerListSkeleton(),
+        ],
+      ),
+    };
   }
 }
 

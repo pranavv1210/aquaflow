@@ -46,33 +46,31 @@ class _PartnerTankerFormPageState extends ConsumerState<PartnerTankerFormPage> {
     final pt = ref.watch(
       selectedPartnerTankerProvider(widget.partnerTankerId!),
     );
-    return pt.when(
-      loading:
-          () => const AppScreen(
-            children: [
-              PageHeader(title: 'Edit Partner Tanker', subtitle: 'Loading...'),
-              PartnerTankerListSkeleton(),
-            ],
-          ),
-      error:
-          (e, s) => AppScreen(
-            children: [
-              const PageHeader(title: 'Edit Partner Tanker', subtitle: 'Error'),
-              ErrorStateWidget(
-                title: 'Unable to load partner tanker',
-                message: e.toString(),
-                onRetry:
-                    () => ref.invalidate(
-                      selectedPartnerTankerProvider(widget.partnerTankerId!),
-                    ),
-              ),
-            ],
-          ),
-      data: (PartnerTanker p) {
-        _populateOnce(p);
+    return switch (pt) {
+      AsyncData<PartnerTanker>(:final value) => () {
+        _populateOnce(value);
         return _buildForm();
-      },
-    );
+      }(),
+      AsyncError<PartnerTanker>(:final error) => AppScreen(
+        children: [
+          const PageHeader(title: 'Edit Partner Tanker', subtitle: 'Error'),
+          ErrorStateWidget(
+            title: 'Unable to load partner tanker',
+            message: error.toString(),
+            onRetry:
+                () => ref.invalidate(
+                  selectedPartnerTankerProvider(widget.partnerTankerId!),
+                ),
+          ),
+        ],
+      ),
+      _ => const AppScreen(
+        children: [
+          PageHeader(title: 'Edit Partner Tanker', subtitle: 'Loading...'),
+          PartnerTankerListSkeleton(),
+        ],
+      ),
+    };
   }
 
   Widget _buildForm() => BaseMasterForm(

@@ -41,28 +41,23 @@ class WaterPointFormFields extends ConsumerWidget {
             );
           },
         ),
-        locations.when(
-          data: (List<Location> items) {
-            final selectedLocation = _selectedLocation(items);
-            return AppDropdown<Location>(
-              label: 'Location',
-              value: selectedLocation,
-              items: items,
-              itemLabel: (Location location) => location.locationName,
-              onChanged: (Location? location) {
-                locationController.text = location?.id ?? '';
-              },
-            );
-          },
-          error: (Object error, StackTrace stackTrace) {
-            return ErrorStateWidget(
-              title: 'Unable to load locations',
-              message: error.toString(),
-              onRetry: () => ref.invalidate(locationListProvider),
-            );
-          },
-          loading: () => const SkeletonLoader(height: 56),
-        ),
+        switch (locations) {
+          AsyncData<List<Location>>(:final value) => AppDropdown<Location>(
+            label: 'Location',
+            value: _selectedLocation(value),
+            items: value,
+            itemLabel: (Location location) => location.locationName,
+            onChanged: (Location? location) {
+              locationController.text = location?.id ?? '';
+            },
+          ),
+          AsyncError<List<Location>>(:final error) => ErrorStateWidget(
+            title: 'Unable to load locations',
+            message: error.toString(),
+            onRetry: () => ref.invalidate(locationListProvider),
+          ),
+          _ => const SkeletonLoader(height: 56),
+        },
         AppTextField(
           label: 'Notes',
           hintText: 'Optional',

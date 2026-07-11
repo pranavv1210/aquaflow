@@ -21,36 +21,30 @@ class PartnerTankerProfilePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pt = ref.watch(selectedPartnerTankerProvider(partnerTankerId));
-    return pt.when(
-      loading:
-          () => const AppScreen(
-            children: [
-              PageHeader(
-                title: 'Partner Tanker Profile',
-                subtitle: 'Loading...',
-              ),
-              PartnerTankerListSkeleton(),
-            ],
+    return switch (pt) {
+      AsyncData<PartnerTanker>(:final value) => _PartnerTankerProfileContent(
+        partnerTanker: value,
+      ),
+      AsyncError<PartnerTanker>(:final error) => AppScreen(
+        children: [
+          const PageHeader(title: 'Partner Tanker Profile', subtitle: 'Error'),
+          ErrorStateWidget(
+            title: 'Unable to load partner tanker',
+            message: error.toString(),
+            onRetry:
+                () => ref.invalidate(
+                  selectedPartnerTankerProvider(partnerTankerId),
+                ),
           ),
-      error:
-          (e, s) => AppScreen(
-            children: [
-              const PageHeader(
-                title: 'Partner Tanker Profile',
-                subtitle: 'Error',
-              ),
-              ErrorStateWidget(
-                title: 'Unable to load partner tanker',
-                message: e.toString(),
-                onRetry:
-                    () => ref.invalidate(
-                      selectedPartnerTankerProvider(partnerTankerId),
-                    ),
-              ),
-            ],
-          ),
-      data: (PartnerTanker p) => _PartnerTankerProfileContent(partnerTanker: p),
-    );
+        ],
+      ),
+      _ => const AppScreen(
+        children: [
+          PageHeader(title: 'Partner Tanker Profile', subtitle: 'Loading...'),
+          PartnerTankerListSkeleton(),
+        ],
+      ),
+    };
   }
 }
 

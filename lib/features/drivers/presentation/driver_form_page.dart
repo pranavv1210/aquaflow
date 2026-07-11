@@ -54,33 +54,29 @@ class _DriverFormPageState extends ConsumerState<DriverFormPage> {
     }
 
     final driver = ref.watch(selectedDriverProvider(widget.driverId!));
-    return driver.when(
-      loading:
-          () => const AppScreen(
-            children: <Widget>[
-              PageHeader(title: 'Edit Driver', subtitle: 'Loading...'),
-              DriverListSkeleton(),
-            ],
-          ),
-      error: (Object error, StackTrace stackTrace) {
-        return AppScreen(
-          children: <Widget>[
-            const PageHeader(title: 'Edit Driver', subtitle: 'Error'),
-            ErrorStateWidget(
-              title: 'Unable to load driver',
-              message: error.toString(),
-              onRetry:
-                  () =>
-                      ref.invalidate(selectedDriverProvider(widget.driverId!)),
-            ),
-          ],
-        );
-      },
-      data: (Driver driver) {
-        _populateOnce(driver);
+    return switch (driver) {
+      AsyncData<Driver>(:final value) => () {
+        _populateOnce(value);
         return _buildForm();
-      },
-    );
+      }(),
+      AsyncError<Driver>(:final error) => AppScreen(
+        children: <Widget>[
+          const PageHeader(title: 'Edit Driver', subtitle: 'Error'),
+          ErrorStateWidget(
+            title: 'Unable to load driver',
+            message: error.toString(),
+            onRetry:
+                () => ref.invalidate(selectedDriverProvider(widget.driverId!)),
+          ),
+        ],
+      ),
+      _ => const AppScreen(
+        children: <Widget>[
+          PageHeader(title: 'Edit Driver', subtitle: 'Loading...'),
+          DriverListSkeleton(),
+        ],
+      ),
+    };
   }
 
   Widget _buildForm() {

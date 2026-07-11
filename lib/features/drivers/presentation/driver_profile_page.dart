@@ -26,30 +26,25 @@ class DriverProfilePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final driver = ref.watch(selectedDriverProvider(driverId));
 
-    return driver.when(
-      loading:
-          () => const AppScreen(
-            children: <Widget>[
-              PageHeader(title: 'Driver Profile', subtitle: 'Loading...'),
-              DriverListSkeleton(),
-            ],
+    return switch (driver) {
+      AsyncData<Driver>(:final value) => _DriverProfileContent(driver: value),
+      AsyncError<Driver>(:final error) => AppScreen(
+        children: <Widget>[
+          const PageHeader(title: 'Driver Profile', subtitle: 'Error'),
+          ErrorStateWidget(
+            title: 'Unable to load driver',
+            message: error.toString(),
+            onRetry: () => ref.invalidate(selectedDriverProvider(driverId)),
           ),
-      error: (Object error, StackTrace stackTrace) {
-        return AppScreen(
-          children: <Widget>[
-            const PageHeader(title: 'Driver Profile', subtitle: 'Error'),
-            ErrorStateWidget(
-              title: 'Unable to load driver',
-              message: error.toString(),
-              onRetry: () => ref.invalidate(selectedDriverProvider(driverId)),
-            ),
-          ],
-        );
-      },
-      data: (Driver driver) {
-        return _DriverProfileContent(driver: driver);
-      },
-    );
+        ],
+      ),
+      _ => const AppScreen(
+        children: <Widget>[
+          PageHeader(title: 'Driver Profile', subtitle: 'Loading...'),
+          DriverListSkeleton(),
+        ],
+      ),
+    };
   }
 }
 

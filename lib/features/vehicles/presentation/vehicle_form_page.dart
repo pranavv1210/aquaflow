@@ -55,34 +55,30 @@ class _VehicleFormPageState extends ConsumerState<VehicleFormPage> {
     }
 
     final vehicle = ref.watch(selectedVehicleProvider(widget.vehicleId!));
-    return vehicle.when(
-      loading:
-          () => const AppScreen(
-            children: <Widget>[
-              PageHeader(title: 'Edit Vehicle', subtitle: 'Loading...'),
-              VehicleListSkeleton(),
-            ],
-          ),
-      error: (Object error, StackTrace stackTrace) {
-        return AppScreen(
-          children: <Widget>[
-            const PageHeader(title: 'Edit Vehicle', subtitle: 'Error'),
-            ErrorStateWidget(
-              title: 'Unable to load vehicle',
-              message: error.toString(),
-              onRetry:
-                  () => ref.invalidate(
-                    selectedVehicleProvider(widget.vehicleId!),
-                  ),
-            ),
-          ],
-        );
-      },
-      data: (Vehicle vehicle) {
-        _populateOnce(vehicle);
+    return switch (vehicle) {
+      AsyncData<Vehicle>(:final value) => () {
+        _populateOnce(value);
         return _buildForm();
-      },
-    );
+      }(),
+      AsyncError<Vehicle>(:final error) => AppScreen(
+        children: <Widget>[
+          const PageHeader(title: 'Edit Vehicle', subtitle: 'Error'),
+          ErrorStateWidget(
+            title: 'Unable to load vehicle',
+            message: error.toString(),
+            onRetry:
+                () =>
+                    ref.invalidate(selectedVehicleProvider(widget.vehicleId!)),
+          ),
+        ],
+      ),
+      _ => const AppScreen(
+        children: <Widget>[
+          PageHeader(title: 'Edit Vehicle', subtitle: 'Loading...'),
+          VehicleListSkeleton(),
+        ],
+      ),
+    };
   }
 
   Widget _buildForm() {

@@ -24,38 +24,32 @@ class ExpenseCategoryProfilePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ec = ref.watch(selectedExpenseCategoryProvider(expenseCategoryId));
-    return ec.when(
-      loading:
-          () => const AppScreen(
-            children: [
-              PageHeader(
-                title: 'Expense Category Profile',
-                subtitle: 'Loading...',
-              ),
-              ExpenseCategoryListSkeleton(),
-            ],
+    return switch (ec) {
+      AsyncData<ExpenseCategory>(:final value) =>
+        _ExpenseCategoryProfileContent(expenseCategory: value),
+      AsyncError<ExpenseCategory>(:final error) => AppScreen(
+        children: [
+          const PageHeader(
+            title: 'Expense Category Profile',
+            subtitle: 'Error',
           ),
-      error:
-          (e, s) => AppScreen(
-            children: [
-              const PageHeader(
-                title: 'Expense Category Profile',
-                subtitle: 'Error',
-              ),
-              ErrorStateWidget(
-                title: 'Unable to load expense category',
-                message: e.toString(),
-                onRetry:
-                    () => ref.invalidate(
-                      selectedExpenseCategoryProvider(expenseCategoryId),
-                    ),
-              ),
-            ],
+          ErrorStateWidget(
+            title: 'Unable to load expense category',
+            message: error.toString(),
+            onRetry:
+                () => ref.invalidate(
+                  selectedExpenseCategoryProvider(expenseCategoryId),
+                ),
           ),
-      data:
-          (ExpenseCategory ec) =>
-              _ExpenseCategoryProfileContent(expenseCategory: ec),
-    );
+        ],
+      ),
+      _ => const AppScreen(
+        children: [
+          PageHeader(title: 'Expense Category Profile', subtitle: 'Loading...'),
+          ExpenseCategoryListSkeleton(),
+        ],
+      ),
+    };
   }
 }
 

@@ -21,14 +21,27 @@ class LocationProfilePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final location = ref.watch(selectedLocationProvider(locationId));
-    return location.when(
-      loading: () => const AppScreen(children: [PageHeader(title: 'Location Profile', subtitle: 'Loading...'), LocationListSkeleton()]),
-      error: (e, s) => AppScreen(children: [
-        const PageHeader(title: 'Location Profile', subtitle: 'Error'),
-        ErrorStateWidget(title: 'Unable to load location', message: e.toString(), onRetry: () => ref.invalidate(selectedLocationProvider(locationId))),
-      ]),
-      data: (Location loc) => _LocationProfileContent(location: loc),
-    );
+    return switch (location) {
+      AsyncData<Location>(:final value) => _LocationProfileContent(
+        location: value,
+      ),
+      AsyncError<Location>(:final error) => AppScreen(
+        children: [
+          const PageHeader(title: 'Location Profile', subtitle: 'Error'),
+          ErrorStateWidget(
+            title: 'Unable to load location',
+            message: error.toString(),
+            onRetry: () => ref.invalidate(selectedLocationProvider(locationId)),
+          ),
+        ],
+      ),
+      _ => const AppScreen(
+        children: [
+          PageHeader(title: 'Location Profile', subtitle: 'Loading...'),
+          LocationListSkeleton(),
+        ],
+      ),
+    };
   }
 }
 
@@ -43,7 +56,10 @@ class _LocationProfileContent extends ConsumerWidget {
           title: location.locationName,
           subtitle: 'Location Profile',
           trailing: IconButton.filledTonal(
-            onPressed: () => ref.read(navigationServiceProvider).goToEditLocation(context, location.id),
+            onPressed:
+                () => ref
+                    .read(navigationServiceProvider)
+                    .goToEditLocation(context, location.id),
             icon: const Icon(Icons.edit_outlined),
           ),
         ),
@@ -52,23 +68,55 @@ class _LocationProfileContent extends ConsumerWidget {
             children: [
               _DetailRow(label: 'Notes', value: location.notes ?? 'Not set'),
               const SizedBox(height: AppSpacing.sm),
-              _DetailRow(label: 'Created', value: AppFormatters.date(location.createdAt)),
+              _DetailRow(
+                label: 'Created',
+                value: AppFormatters.date(location.createdAt),
+              ),
               const SizedBox(height: AppSpacing.sm),
-              _DetailRow(label: 'Updated', value: AppFormatters.date(location.updatedAt)),
+              _DetailRow(
+                label: 'Updated',
+                value: AppFormatters.date(location.updatedAt),
+              ),
             ],
           ),
         ),
         const SectionTitle(title: 'Related Orders'),
-        const EmptyStateWidget(title: 'Orders Pending', message: 'Orders will appear after the Orders phase is connected.', icon: Icons.receipt_long_outlined),
-        SecondaryButton(label: 'Delete Location', icon: Icons.delete_outline_rounded, onPressed: () async {
-          final confirmed = await MasterDialogs.confirmDelete(context, title: 'Delete Location?', message: 'This will deactivate the location without removing history.');
-          if (!confirmed || !context.mounted) return;
-          final result = await ref.read(deleteLocationUseCaseProvider)(location.id);
-          result.when(
-            success: (_) { ref.invalidate(locationListProvider); ref.invalidate(selectedLocationProvider(location.id)); if (context.mounted) { MasterDialogs.showSaved(context, 'Location deleted'); ref.read(navigationServiceProvider).goToLocations(context); } },
-            failure: (error) { if (context.mounted) MasterDialogs.showError(context, error.message); },
-          );
-        }),
+        const EmptyStateWidget(
+          title: 'Orders Pending',
+          message: 'Orders will appear after the Orders phase is connected.',
+          icon: Icons.receipt_long_outlined,
+        ),
+        SecondaryButton(
+          label: 'Delete Location',
+          icon: Icons.delete_outline_rounded,
+          onPressed: () async {
+            final confirmed = await MasterDialogs.confirmDelete(
+              context,
+              title: 'Delete Location?',
+              message:
+                  'This will deactivate the location without removing history.',
+            );
+            if (!confirmed || !context.mounted) return;
+            final result = await ref.read(deleteLocationUseCaseProvider)(
+              location.id,
+            );
+            result.when(
+              success: (_) {
+                ref.invalidate(locationListProvider);
+                ref.invalidate(selectedLocationProvider(location.id));
+                if (context.mounted) {
+                  MasterDialogs.showSaved(context, 'Location deleted');
+                  ref.read(navigationServiceProvider).goToLocations(context);
+                }
+              },
+              failure: (error) {
+                if (context.mounted) {
+                  MasterDialogs.showError(context, error.message);
+                }
+              },
+            );
+          },
+        ),
       ],
     );
   }
@@ -76,13 +124,23 @@ class _LocationProfileContent extends ConsumerWidget {
 
 class _DetailRow extends StatelessWidget {
   const _DetailRow({required this.label, required this.value});
-  final String label; final String value;
+  final String label;
+  final String value;
   @override
   Widget build(BuildContext context) {
-    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Expanded(child: Text(label)),
-      const SizedBox(width: AppSpacing.md),
-      Expanded(child: Text(value, textAlign: TextAlign.end, style: Theme.of(context).textTheme.titleMedium)),
-    ]);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: Text(label)),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
+      ],
+    );
   }
 }
