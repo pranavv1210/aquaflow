@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/helpers/app_formatters.dart';
 import '../../core/router/app_routes.dart';
+import '../../core/services/snackbar_service.dart';
 import '../../core/shared/widgets/app_screen.dart';
 import '../../core/shared/widgets/aqua_filter_chip.dart';
 import '../../core/shared/widgets/aquaflow_fab.dart';
@@ -11,12 +12,13 @@ import '../../core/shared/widgets/empty_state_widget.dart';
 import '../../core/shared/widgets/error_state_widget.dart';
 import '../../core/shared/widgets/order_card.dart';
 import '../../core/shared/widgets/page_header.dart';
-import '../../core/shared/widgets/premium_bottom_sheet.dart';
 import '../../core/shared/widgets/search_field.dart';
 import '../../core/shared/widgets/skeleton_loader.dart';
 import '../../core/shared/widgets/timed_loading_view.dart';
 import '../../core/theme/app_spacing.dart';
+import '../analytics/application/analytics_providers.dart';
 import 'application/order_providers.dart';
+import 'domain/order_input.dart';
 import 'domain/order_record.dart';
 
 class OrdersPage extends ConsumerStatefulWidget {
@@ -111,13 +113,9 @@ class _OrdersPageState extends ConsumerState<OrdersPage> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return PageHeader(
+    return const PageHeader(
       title: 'Orders',
       subtitle: 'Search and manage tanker deliveries',
-      trailing: IconButton.filledTonal(
-        onPressed: () => _showFilterSheet(context),
-        icon: const Icon(Icons.tune_rounded),
-      ),
     );
   }
 
@@ -183,11 +181,14 @@ class _OrdersPageState extends ConsumerState<OrdersPage> {
       vehicleName: order.vehicleName,
       driverName: order.driverName,
       amount: AppFormatters.currency(order.amount),
+      paidAmount: AppFormatters.currency(order.paidAmount),
       pendingAmount: AppFormatters.currency(order.pendingAmount),
       loadCount: order.loadCount.toString(),
       paymentStatus: _statusLabel(order.paymentStatus),
       deliveryStatus: _statusLabel(order.deliveryStatus),
       date: AppFormatters.date(order.orderDate),
+      onTogglePayment: () => _togglePayment(order),
+      onToggleDelivery: () => _toggleDelivery(order),
       onTap: () => context.go(AppRoutes.orderDetailsPath(order.id)),
     );
   }
@@ -220,39 +221,84 @@ class _OrdersPageState extends ConsumerState<OrdersPage> {
     }
   }
 
-  void _showFilterSheet(BuildContext context) {
-    PremiumBottomSheet.show<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.md),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text(
-                'Filter Orders',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Wrap(
-                spacing: AppSpacing.xs,
-                runSpacing: AppSpacing.xs,
-                children: <Widget>[
-                  for (var index = 0; index < _filters.length; index++)
-                    AquaFilterChip(
-                      label: _filters[index],
-                      selected: index == _selectedFilter,
-                      onSelected: (_) {
-                        setState(() => _selectedFilter = index);
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                ],
-              ),
-            ],
-          ),
-        );
+  Future<void> _togglePayment(OrderRecord order) async {
+    final paid = order.paymentStatus == 'paid';
+    await _saveQuickStatus(
+      order,
+      paidAmount: paid ? 0 : order.amount,
+      paymentStatus: paid ? 'unpaid' : 'paid',
+      successMessage: paid ? 'Order marked unpaid' : 'Order marked paid',
+    );
+  }
+
+  Future<void> _toggleDelivery(OrderRecord order) async {
+    final delivered = order.deliveryStatus == 'delivered';
+    await _saveQuickStatus(
+      order,
+      deliveryStatus: delivered ? 'order_received' : 'delivered',
+      successMessage:
+          delivered ? 'Delivery reopened' : 'Delivery marked delivered',
+    );
+  }
+
+  Future<void> _saveQuickStatus(
+    OrderRecord order, {
+    num? paidAmount,
+    String? paymentStatus,
+    String? deliveryStatus,
+    required String successMessage,
+  }) async {
+    await saveOrder(
+      ref,
+      orderId: order.id,
+      input: _inputFromRecord(
+        order,
+        paidAmount: paidAmount,
+        paymentStatus: paymentStatus,
+        deliveryStatus: deliveryStatus,
+      ),
+      onSuccess: (_) {
+        _invalidateCurrentList();
+        invalidateBusinessMetrics(ref);
+        SnackbarService.success(successMessage);
       },
+      onFailure: SnackbarService.error,
+    );
+  }
+
+  OrderInput _inputFromRecord(
+    OrderRecord order, {
+    num? paidAmount,
+    String? paymentStatus,
+    String? deliveryStatus,
+  }) {
+    return OrderInput(
+      orderDate: order.orderDate,
+      orderTime: _orderTime(order),
+      customerId: order.customerId,
+      locationId: order.locationId,
+      waterPointId: order.waterPointId,
+      vehicleId: order.vehicleId,
+      driverId: order.driverId,
+      loadCount: order.loadCount,
+      amount: order.amount,
+      paidAmount: paidAmount ?? order.paidAmount,
+      paymentStatus: paymentStatus ?? order.paymentStatus,
+      deliveryStatus: deliveryStatus ?? order.deliveryStatus,
+      remarks: order.remarks,
+    );
+  }
+
+  DateTime _orderTime(OrderRecord order) {
+    final parts = order.orderTime.split(':');
+    final hour = int.tryParse(parts.isNotEmpty ? parts[0] : '') ?? 0;
+    final minute = int.tryParse(parts.length > 1 ? parts[1] : '') ?? 0;
+    return DateTime(
+      order.orderDate.year,
+      order.orderDate.month,
+      order.orderDate.day,
+      hour,
+      minute,
     );
   }
 

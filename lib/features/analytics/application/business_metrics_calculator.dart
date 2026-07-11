@@ -58,11 +58,9 @@ class BusinessMetricsCalculator {
     required List<OrderRecord> orders,
     required List<ExpenseRecord> expenses,
   }) {
-    final delivered = orders
-        .where((OrderRecord order) => order.deliveryStatus == 'delivered')
-        .toList(growable: false);
+    final revenueOrders = orders;
     final dailyRevenue = _seriesByDay<OrderRecord>(
-      delivered,
+      revenueOrders,
       (OrderRecord order) => order.orderDate,
       (OrderRecord order) => order.amount,
       days: 14,
@@ -74,7 +72,7 @@ class BusinessMetricsCalculator {
       days: 14,
     );
     final monthlyRevenue = _seriesByMonth<OrderRecord>(
-      delivered,
+      revenueOrders,
       (OrderRecord order) => order.orderDate,
       (OrderRecord order) => order.amount,
       months: 6,
@@ -95,17 +93,17 @@ class BusinessMetricsCalculator {
       monthlyProfit: _subtractSeries(monthlyRevenue, monthlyExpenses),
       pendingCollections: _pendingPayments(orders),
       vehicleRevenue: _topByLabel<OrderRecord>(
-        delivered,
+        revenueOrders,
         (OrderRecord order) => order.vehicleName,
         (OrderRecord order) => order.amount,
       ),
       driverRevenue: _topByLabel<OrderRecord>(
-        delivered,
+        revenueOrders,
         (OrderRecord order) => order.driverName,
         (OrderRecord order) => order.amount,
       ),
       customerRevenue: _topByLabel<OrderRecord>(
-        delivered,
+        revenueOrders,
         (OrderRecord order) => order.customerName,
         (OrderRecord order) => order.amount,
       ),
