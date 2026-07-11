@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart' as cupertino;
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../theme/app_colors.dart';
-import '../../theme/app_design_tokens.dart';
 import '../../theme/app_spacing.dart';
 import 'page_header.dart';
 
@@ -13,7 +12,7 @@ class AppScreen extends StatefulWidget {
     super.key,
     this.padding = const EdgeInsets.fromLTRB(
       AppSpacing.md,
-      AppSpacing.md, // reduced top padding since SliverAppBar handles it
+      AppSpacing.lg,
       AppSpacing.md,
       AppSpacing.xxl,
     ),
@@ -61,9 +60,11 @@ class _AppScreenState extends State<AppScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hasHeader = widget.children.isNotEmpty && widget.children.first is PageHeader;
+    final hasHeader =
+        widget.children.isNotEmpty && widget.children.first is PageHeader;
     final headerWidget = hasHeader ? widget.children.first as PageHeader : null;
-    final contentChildren = hasHeader ? widget.children.sublist(1) : widget.children;
+    final contentChildren =
+        hasHeader ? widget.children.sublist(1) : widget.children;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
@@ -87,8 +88,9 @@ class _AppScreenState extends State<AppScreen> {
           }
           return child;
         },
-        separatorBuilder: (BuildContext context, int index) =>
-            const SizedBox(height: AppSpacing.md),
+        separatorBuilder:
+            (BuildContext context, int index) =>
+                const SizedBox(height: AppSpacing.md),
         itemCount: contentChildren.length,
       ),
     );
@@ -98,35 +100,55 @@ class _AppScreenState extends State<AppScreen> {
         slivers: [
           cupertino.CupertinoSliverRefreshControl(
             onRefresh: widget.onRefresh,
-            builder: (context, refreshState, pulledExtent, refreshTriggerPullDistance, refreshIndicatorExtent) {
+            builder: (
+              context,
+              refreshState,
+              pulledExtent,
+              refreshTriggerPullDistance,
+              refreshIndicatorExtent,
+            ) {
               return Center(
                 child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.aqua400, width: 2),
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: 16 * (pulledExtent / refreshTriggerPullDistance).clamp(0.0, 1.0),
-                      height: 16 * (pulledExtent / refreshTriggerPullDistance).clamp(0.0, 1.0),
-                      decoration: const BoxDecoration(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.aqua400,
+                        border: Border.all(color: AppColors.aqua400, width: 2),
                       ),
-                    ),
-                  ),
-                ).animate(
-                  onPlay: (controller) => controller.repeat(),
-                  target: refreshState == cupertino.RefreshIndicatorMode.refresh ? 1 : 0,
-                ).scale(
-                  begin: const Offset(1, 1),
-                  end: const Offset(1.5, 1.5),
-                  duration: const Duration(milliseconds: 1000),
-                ).fadeOut(
-                  duration: const Duration(milliseconds: 1000),
-                ),
+                      child: Center(
+                        child: Container(
+                          width:
+                              16 *
+                              (pulledExtent / refreshTriggerPullDistance).clamp(
+                                0.0,
+                                1.0,
+                              ),
+                          height:
+                              16 *
+                              (pulledExtent / refreshTriggerPullDistance).clamp(
+                                0.0,
+                                1.0,
+                              ),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.aqua400,
+                          ),
+                        ),
+                      ),
+                    )
+                    .animate(
+                      onPlay: (controller) => controller.repeat(),
+                      target:
+                          refreshState == cupertino.RefreshIndicatorMode.refresh
+                              ? 1
+                              : 0,
+                    )
+                    .scale(
+                      begin: const Offset(1, 1),
+                      end: const Offset(1.5, 1.5),
+                      duration: const Duration(milliseconds: 1000),
+                    )
+                    .fadeOut(duration: const Duration(milliseconds: 1000)),
               );
             },
           ),
@@ -137,7 +159,9 @@ class _AppScreenState extends State<AppScreen> {
 
     final scrollView = CustomScrollView(
       controller: _scrollController,
-      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       slivers: <Widget>[
         if (headerWidget != null)
@@ -145,22 +169,32 @@ class _AppScreenState extends State<AppScreen> {
             backgroundColor: bgColor,
             surfaceTintColor: Colors.transparent,
             pinned: true,
+            toolbarHeight: 122,
             elevation: _isScrolled ? 1 : 0,
             shadowColor: AppColors.ink900.withValues(alpha: 0.1),
             forceElevated: _isScrolled,
             automaticallyImplyLeading: false,
-            bottom: _isScrolled
-                ? PreferredSize(
-                    preferredSize: const Size.fromHeight(1),
-                    child: Container(
-                      color: isDark ? AppColors.borderHairlineDark : AppColors.borderHairline,
-                      height: 1,
-                    ),
-                  )
-                : null,
+            bottom:
+                _isScrolled
+                    ? PreferredSize(
+                      preferredSize: const Size.fromHeight(1),
+                      child: Container(
+                        color:
+                            isDark
+                                ? AppColors.borderHairlineDark
+                                : AppColors.borderHairline,
+                        height: 1,
+                      ),
+                    )
+                    : null,
             titleSpacing: 0,
             title: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                AppSpacing.sm,
+              ),
               child: headerWidget.buildHeaderContent(context),
             ),
           ),
@@ -178,10 +212,7 @@ class _AppScreenState extends State<AppScreen> {
 
     Widget decorated = ColoredBox(
       color: bgColor,
-      child: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[content],
-      ),
+      child: Stack(fit: StackFit.expand, children: <Widget>[content]),
     );
 
     if (widget.floatingActionButton == null) {

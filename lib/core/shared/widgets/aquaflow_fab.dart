@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/app_colors.dart';
-import '../../theme/app_elevation.dart';
 import '../../theme/app_radius.dart';
 
 class AquaFlowFab extends StatelessWidget {
@@ -26,10 +25,7 @@ class AquaFlowFab extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.lg),
         child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: 16,
-            sigmaY: 16,
-          ),
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: AppColors.ocean900.withValues(alpha: 0.9),
@@ -46,7 +42,9 @@ class AquaFlowFab extends StatelessWidget {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                overlayColor: WidgetStateProperty.all(AppColors.aqua400.withValues(alpha: 0.2)),
+                overlayColor: WidgetStateProperty.all(
+                  AppColors.aqua400.withValues(alpha: 0.2),
+                ),
                 onTap:
                     onPressed == null
                         ? null
