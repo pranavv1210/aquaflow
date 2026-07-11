@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/config/app_config.dart';
+import 'core/constants/app_constants.dart';
 import 'core/application/configuration_providers.dart';
 import 'core/services/app_logger.dart';
 import 'core/services/supabase_service.dart';
@@ -66,6 +68,7 @@ Future<void> main() async {
       };
 
       final config = await AppConfig.load();
+      await initializeDateFormatting(AppConstants.indianLocale);
       await SupabaseService.initialize(config);
       SupabaseService.instance.initializeRealtime();
 

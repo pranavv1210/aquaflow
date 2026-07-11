@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/services/snackbar_service.dart';
+import '../../../core/shared/widgets/app_buttons.dart';
 import '../../../core/shared/widgets/app_screen.dart';
+import '../../../core/shared/widgets/app_text_field.dart';
 import '../../../core/shared/widgets/error_state_widget.dart';
 import '../../../core/shared/widgets/glass_card.dart';
 import '../../../core/shared/widgets/page_header.dart';
@@ -10,11 +13,34 @@ import '../../../core/shared/widgets/skeleton_loader.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../application/settings_providers.dart';
 
-class SettingsPage extends ConsumerWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends ConsumerState<SettingsPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _businessNameController = TextEditingController();
+  final _ownerNameController = TextEditingController();
+  final _ownerPhoneController = TextEditingController();
+  final _ownerAddressController = TextEditingController();
+
+  String? _loadedSignature;
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _businessNameController.dispose();
+    _ownerNameController.dispose();
+    _ownerPhoneController.dispose();
+    _ownerAddressController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final profile = ref.watch(businessProfileSettingsProvider);
     final version = ref.watch(appVersionLabelProvider);
 
@@ -22,7 +48,7 @@ class SettingsPage extends ConsumerWidget {
       return const AppScreen(
         children: <Widget>[
           PageHeader(title: 'Settings', subtitle: 'Loading...'),
-          SkeletonLoader(height: 180),
+          SkeletonLoader(height: 220),
           SkeletonLoader(height: 120),
         ],
       );
@@ -46,67 +72,60 @@ class SettingsPage extends ConsumerWidget {
     }
 
     final settings = profile.value!;
+    _syncControllers(settings);
+
     return AppScreen(
       children: <Widget>[
-        const PageHeader(title: 'Settings', subtitle: 'App configuration'),
+        const PageHeader(title: 'Settings', subtitle: 'Business profile'),
         const SectionTitle(title: 'Business'),
-        GlassCard(
-          child: Column(
-            children: <Widget>[
-              _SettingRow(
-                icon: Icons.storefront_outlined,
-                label: 'Business Name',
-                value: settings.businessName,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _SettingRow(
-                icon: Icons.person_outline_rounded,
-                label: 'Owner Name',
-                value: _fallback(settings.ownerName),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _SettingRow(
-                icon: Icons.phone_outlined,
-                label: 'Owner Phone',
-                value: _fallback(settings.ownerPhone),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _SettingRow(
-                icon: Icons.location_on_outlined,
-                label: 'Owner Address',
-                value: _fallback(settings.ownerAddress),
-              ),
-            ],
-          ),
-        ),
-        const SectionTitle(title: 'Preferences'),
-        GlassCard(
-          child: Column(
-            children: <Widget>[
-              _SettingRow(
-                icon: Icons.currency_rupee_rounded,
-                label: 'Currency',
-                value: settings.currency,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _SettingRow(
-                icon: Icons.calendar_today_outlined,
-                label: 'Date Format',
-                value: settings.dateFormat,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _SettingRow(
-                icon: Icons.schedule_rounded,
-                label: 'Time Format',
-                value: settings.timeFormat,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              const _SettingRow(
-                icon: Icons.brightness_auto_outlined,
-                label: 'Theme',
-                value: 'System',
-              ),
-            ],
+        Form(
+          key: _formKey,
+          child: GlassCard(
+            child: Column(
+              children: <Widget>[
+                AppTextField(
+                  label: 'Business Name',
+                  controller: _businessNameController,
+                  prefixIcon: Icons.storefront_outlined,
+                  textInputAction: TextInputAction.next,
+                  validator:
+                      (String? value) =>
+                          (value?.trim().isEmpty ?? true)
+                              ? 'Business name is required'
+                              : null,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppTextField(
+                  label: 'Owner Name',
+                  controller: _ownerNameController,
+                  prefixIcon: Icons.person_outline_rounded,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppTextField(
+                  label: 'Owner Phone',
+                  controller: _ownerPhoneController,
+                  prefixIcon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppTextField(
+                  label: 'Owner Address',
+                  controller: _ownerAddressController,
+                  prefixIcon: Icons.location_on_outlined,
+                  maxLines: 3,
+                  textInputAction: TextInputAction.done,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                PrimaryButton(
+                  label: 'Save Settings',
+                  icon: Icons.check_rounded,
+                  isLoading: _isSaving,
+                  onPressed: _isSaving ? null : () => _save(settings),
+                ),
+              ],
+            ),
           ),
         ),
         const SectionTitle(title: 'About'),
@@ -117,12 +136,6 @@ class SettingsPage extends ConsumerWidget {
                 icon: Icons.info_outline_rounded,
                 label: 'App',
                 value: 'AquaFlow',
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              const _SettingRow(
-                icon: Icons.water_drop_outlined,
-                label: 'Header',
-                value: 'Water Management System',
               ),
               const SizedBox(height: AppSpacing.sm),
               _SettingRow(
@@ -137,8 +150,45 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  String _fallback(String value) {
-    return value.trim().isEmpty ? 'Not set' : value;
+  void _syncControllers(BusinessProfileSettings settings) {
+    final signature = settings.toJson().toString();
+    if (_loadedSignature == signature) {
+      return;
+    }
+    _loadedSignature = signature;
+    _businessNameController.text = settings.businessName;
+    _ownerNameController.text = settings.ownerName;
+    _ownerPhoneController.text = settings.ownerPhone;
+    _ownerAddressController.text = settings.ownerAddress;
+  }
+
+  Future<void> _save(BusinessProfileSettings current) async {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => _isSaving = true);
+    try {
+      await ref.read(saveBusinessProfileSettingsProvider)(
+        current.copyWith(
+          businessName: _businessNameController.text,
+          ownerName: _ownerNameController.text,
+          ownerPhone: _ownerPhoneController.text,
+          ownerAddress: _ownerAddressController.text,
+        ),
+      );
+      if (mounted) {
+        SnackbarService.success('Settings saved');
+      }
+    } catch (_) {
+      if (mounted) {
+        SnackbarService.error('Unable to save settings');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
   }
 }
 

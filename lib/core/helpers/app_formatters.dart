@@ -11,15 +11,9 @@ class AppFormatters {
     decimalDigits: 0,
   );
 
-  static final DateFormat _date = DateFormat(
-    AppConstants.dateFormat,
-    AppConstants.indianLocale,
-  );
+  static final DateFormat _date = DateFormat(AppConstants.dateFormat);
 
-  static final DateFormat _time = DateFormat(
-    AppConstants.timeFormat,
-    AppConstants.indianLocale,
-  );
+  static final DateFormat _time = DateFormat(AppConstants.timeFormat);
 
   static String currency(num value) => _currency.format(value);
 

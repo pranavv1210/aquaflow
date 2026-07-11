@@ -22,6 +22,40 @@ class BusinessProfileSettings {
   final String ownerPhone;
   final String ownerAddress;
 
+  BusinessProfileSettings copyWith({
+    String? businessName,
+    String? currency,
+    String? dateFormat,
+    String? timeFormat,
+    String? ownerName,
+    String? ownerPhone,
+    String? ownerAddress,
+  }) {
+    return BusinessProfileSettings(
+      businessName: businessName ?? this.businessName,
+      currency: currency ?? this.currency,
+      dateFormat: dateFormat ?? this.dateFormat,
+      timeFormat: timeFormat ?? this.timeFormat,
+      ownerName: ownerName ?? this.ownerName,
+      ownerPhone: ownerPhone ?? this.ownerPhone,
+      ownerAddress: ownerAddress ?? this.ownerAddress,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'business_name':
+          businessName.trim().isEmpty ? 'AquaFlow' : businessName.trim(),
+      'currency': currency.trim().isEmpty ? 'INR' : currency.trim(),
+      'date_format':
+          dateFormat.trim().isEmpty ? 'dd MMM yyyy' : dateFormat.trim(),
+      'time_format': timeFormat.trim().isEmpty ? '12 Hour' : timeFormat.trim(),
+      'owner_name': ownerName.trim(),
+      'owner_phone': ownerPhone.trim(),
+      'owner_address': ownerAddress.trim(),
+    };
+  }
+
   factory BusinessProfileSettings.fromJson(Map<String, dynamic> json) {
     return BusinessProfileSettings(
       businessName: json['business_name']?.toString() ?? 'AquaFlow',
@@ -55,3 +89,20 @@ final appVersionLabelProvider = FutureProvider.autoDispose<String>((ref) async {
   final info = await ref.watch(packageInfoProvider.future);
   return '${info.version}+${info.buildNumber}';
 });
+
+final saveBusinessProfileSettingsProvider =
+    Provider<Future<void> Function(BusinessProfileSettings)>((ref) {
+      return (BusinessProfileSettings settings) async {
+        await ref.read(supabaseClientProvider).from('business_settings').upsert(
+          <String, dynamic>{
+            'setting_key': 'business_profile',
+            'setting_value': settings.toJson(),
+            'description':
+                'Primary business settings for the single-owner AquaFlow app.',
+            'is_active': true,
+          },
+          onConflict: 'setting_key',
+        );
+        ref.invalidate(businessProfileSettingsProvider);
+      };
+    });

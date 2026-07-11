@@ -61,7 +61,7 @@ class PageHeader extends StatelessWidget {
   }
 
   bool _canNavigateBack(BuildContext context) {
-    final path = GoRouterState.of(context).uri.path;
+    final path = _currentPath(context);
     return path != AppRoutes.home &&
         path != AppRoutes.orders &&
         path != AppRoutes.analytics &&
@@ -70,7 +70,7 @@ class PageHeader extends StatelessWidget {
   }
 
   String _fallbackBackPath(BuildContext context) {
-    final path = GoRouterState.of(context).uri.path;
+    final path = _currentPath(context);
     if (path == AppRoutes.customers ||
         path == AppRoutes.drivers ||
         path == AppRoutes.vehicles ||
@@ -123,5 +123,13 @@ class PageHeader extends StatelessWidget {
       return AppRoutes.more;
     }
     return AppRoutes.home;
+  }
+
+  String _currentPath(BuildContext context) {
+    try {
+      return GoRouterState.of(context).uri.path;
+    } on GoError {
+      return AppRoutes.home;
+    }
   }
 }

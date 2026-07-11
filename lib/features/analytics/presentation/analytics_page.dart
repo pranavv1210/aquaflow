@@ -16,11 +16,18 @@ import '../../orders/application/order_providers.dart';
 import '../application/analytics_providers.dart';
 import '../application/business_metrics.dart';
 
-class AnalyticsPage extends ConsumerWidget {
+class AnalyticsPage extends ConsumerStatefulWidget {
   const AnalyticsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AnalyticsPage> createState() => _AnalyticsPageState();
+}
+
+class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
+  int _selectedRange = 2;
+
+  @override
+  Widget build(BuildContext context) {
     ref.listen(orderRealtimeProvider, (_, next) {
       if (next.hasValue) {
         ref.invalidate(orderListProvider);
@@ -88,9 +95,10 @@ class AnalyticsPage extends ConsumerWidget {
                 icon: const Icon(Icons.refresh_rounded),
               ),
             ),
-            const AquaFilterChipBar(
-              labels: <String>['Today', 'This Month', 'Last 6 Months'],
-              selectedIndex: 2,
+            AquaFilterChipBar(
+              labels: const <String>['Today', 'This Month', 'Last 6 Months'],
+              selectedIndex: _selectedRange,
+              onSelected: (int index) => setState(() => _selectedRange = index),
             ),
             _SummaryGrid(
               dailyRevenue: dailyRevenue,

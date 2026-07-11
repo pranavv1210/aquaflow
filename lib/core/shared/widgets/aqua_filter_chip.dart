@@ -35,10 +35,12 @@ class AquaFilterChipBar extends StatelessWidget {
     required this.labels,
     super.key,
     this.selectedIndex = 0,
+    this.onSelected,
   });
 
   final List<String> labels;
   final int selectedIndex;
+  final ValueChanged<int>? onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +52,8 @@ class AquaFilterChipBar extends StatelessWidget {
           return AquaFilterChip(
             label: labels[index],
             selected: index == selectedIndex,
+            onSelected:
+                onSelected == null ? null : (_) => onSelected?.call(index),
           );
         },
         separatorBuilder:
