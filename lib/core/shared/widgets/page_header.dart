@@ -19,44 +19,58 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canNavigateBack = _canNavigateBack(context);
+    // If PageHeader is used outside of AppScreen, it will render normally
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.lg,
-        AppSpacing.md,
-        AppSpacing.md,
-      ),
-      child: Row(
-        children: <Widget>[
-          if (canNavigateBack) ...<Widget>[
-            IconButton.filledTonal(
-              tooltip: 'Back',
-              onPressed: () {
-                final router = GoRouter.of(context);
-                if (router.canPop()) {
-                  router.pop();
-                } else {
-                  context.go(_fallbackBackPath(context));
-                }
-              },
-              icon: const Icon(Icons.arrow_back_rounded),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-          ],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(title, style: Theme.of(context).textTheme.headlineMedium),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
-              ],
-            ),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: buildHeaderContent(context),
+    );
+  }
+
+  // Method to allow AppScreen to extract and use the content in a SliverAppBar
+  Widget buildHeaderContent(BuildContext context) {
+    final canNavigateBack = _canNavigateBack(context);
+    return Row(
+      children: <Widget>[
+        if (canNavigateBack) ...<Widget>[
+          IconButton.filledTonal(
+            tooltip: 'Back',
+            onPressed: () {
+              final router = GoRouter.of(context);
+              if (router.canPop()) {
+                router.pop();
+              } else {
+                context.go(_fallbackBackPath(context));
+              }
+            },
+            icon: const Icon(Icons.arrow_back_rounded),
           ),
-          if (trailing != null) trailing!,
+          const SizedBox(width: AppSpacing.sm),
         ],
-      ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(
+                title, 
+                style: Theme.of(context).textTheme.displayLarge, // Manrope
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (subtitle.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle, 
+                  style: Theme.of(context).textTheme.bodyMedium, // Inter
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ]
+            ],
+          ),
+        ),
+        if (trailing != null) trailing!,
+      ],
     );
   }
 

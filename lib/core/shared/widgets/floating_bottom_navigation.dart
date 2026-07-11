@@ -2,8 +2,10 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../theme/app_colors.dart';
 import '../../theme/app_design_tokens.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/app_radius.dart';
 
 class FloatingBottomNavigationItem {
   const FloatingBottomNavigationItem({
@@ -31,8 +33,6 @@ class FloatingBottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(
         AppSpacing.md,
@@ -41,26 +41,25 @@ class FloatingBottomNavigation extends StatelessWidget {
         AppSpacing.sm,
       ),
       child: ClipRRect(
-        borderRadius: AppBorders.sheet,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: AppBlur.thin, sigmaY: AppBlur.thin),
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: colorScheme.surface.withValues(alpha: 0.72),
-              borderRadius: AppBorders.sheet,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.58)),
-              boxShadow: <BoxShadow>[
+              color: AppColors.ocean900.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              boxShadow: [
                 BoxShadow(
-                  color: colorScheme.primary.withValues(alpha: 0.16),
-                  blurRadius: 30,
-                  offset: const Offset(0, 14),
+                  color: AppColors.ink900.withValues(alpha: 0.2),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
                 ),
               ],
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.xs,
-                vertical: AppSpacing.xs,
+                horizontal: AppSpacing.sm,
+                vertical: 10,
               ),
               child: Row(
                 children: <Widget>[
@@ -95,13 +94,9 @@ class _FloatingNavigationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
-      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-      color:
-          selected
-              ? colorScheme.primary
-              : colorScheme.onSurface.withValues(alpha: 0.58),
+      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+      color: selected ? AppColors.aqua400 : AppColors.ink500,
     );
 
     return Semantics(
@@ -111,42 +106,51 @@ class _FloatingNavigationItem extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 280),
-          curve: AppAnimationCurves.emphasized,
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-          decoration: BoxDecoration(
-            color:
-                selected
-                    ? colorScheme.primary.withValues(alpha: 0.10)
-                    : Colors.transparent,
-            borderRadius: AppBorders.pill,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              AnimatedScale(
-                scale: selected ? 1.08 : 1,
-                duration: const Duration(milliseconds: 220),
-                curve: AppAnimationCurves.emphasized,
-                child: Icon(
-                  selected ? item.selectedIcon : item.icon,
-                  size: selected ? AppIconSizes.lg : AppIconSizes.md,
-                  color:
-                      selected
-                          ? colorScheme.primary
-                          : colorScheme.onSurface.withValues(alpha: 0.62),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Animated Pill Indicator behind icon
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutBack, // springy
+              top: selected ? 0 : 20,
+              bottom: selected ? 18 : 20, // push it up slightly when active
+              left: selected ? 12 : 24,
+              right: selected ? 12 : 24,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: selected ? 0.15 : 0.0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.aqua400,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
                 ),
               ),
-              const SizedBox(height: 3),
-              Text(
-                item.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: textStyle,
-              ),
-            ],
-          ),
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                AnimatedScale(
+                  scale: selected ? 1.1 : 1.0,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutBack,
+                  child: Icon(
+                    selected ? item.selectedIcon : item.icon,
+                    size: AppIconSizes.lg,
+                    color: selected ? AppColors.aqua400 : AppColors.ink500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textStyle,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

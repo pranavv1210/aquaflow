@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../theme/app_design_tokens.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/app_colors.dart';
 
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
@@ -25,7 +26,7 @@ class PrimaryButton extends StatelessWidget {
         isLoading
             ? const SizedBox.square(
               dimension: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
             )
             : _ButtonContent(label: label, icon: icon);
 
@@ -38,9 +39,12 @@ class PrimaryButton extends StatelessWidget {
                 onPressed?.call();
               },
       style: FilledButton.styleFrom(
+        backgroundColor: AppColors.ocean900,
+        foregroundColor: Colors.white,
+        overlayColor: AppColors.aqua400,
         minimumSize: const Size.fromHeight(52),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
         ),
       ),
       child: child,
@@ -71,9 +75,12 @@ class SecondaryButton extends StatelessWidget {
                 onPressed?.call();
               },
       style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.ocean600,
+        side: const BorderSide(color: AppColors.ocean600),
+        overlayColor: AppColors.aqua400,
         minimumSize: const Size.fromHeight(52),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
         ),
       ),
       child: _ButtonContent(label: label, icon: icon),
@@ -124,6 +131,10 @@ class GlassIconButton extends StatelessWidget {
               },
       iconSize: AppIconSizes.md,
       icon: Icon(icon),
+      style: IconButton.styleFrom(
+        backgroundColor: AppColors.ocean600.withValues(alpha: 0.1),
+        foregroundColor: AppColors.ocean600,
+      ),
     );
   }
 }
@@ -144,7 +155,13 @@ class _ButtonContent extends StatelessWidget {
           Icon(icon, size: 18),
           const SizedBox(width: AppSpacing.xs),
         ],
-        Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
+        Flexible(
+          child: Text(
+            label, 
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          )
+        ),
       ],
     );
   }

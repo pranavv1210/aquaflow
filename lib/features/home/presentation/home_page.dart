@@ -17,6 +17,7 @@ import '../../../core/shared/widgets/skeleton_loader.dart';
 import '../../../core/shared/widgets/status_chip.dart';
 import '../../../core/shared/widgets/timed_loading_view.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../analytics/application/analytics_providers.dart';
 import '../../analytics/application/business_metrics.dart';
 import '../../expenses/application/expense_providers.dart';
@@ -211,62 +212,133 @@ class _DashboardGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        final isWide = constraints.maxWidth > 560;
-        return GridView.count(
-          crossAxisCount: isWide ? 4 : 2,
-          crossAxisSpacing: AppSpacing.md,
-          mainAxisSpacing: AppSpacing.md,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          childAspectRatio: isWide ? 1.35 : 1,
-          children: <Widget>[
-            DashboardCard(
-              title: "Today's Revenue",
-              value: AppFormatters.currency(metrics.todayRevenue),
-              subtitle: 'Delivered orders',
-              icon: Icons.currency_rupee_rounded,
+    // Glass-effect Hero Card with Today's Key Stats
+    return GlassCard(
+      isGlass: true,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Today\'s Snapshot',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white : AppColors.ink900,
+                ),
+              ),
+              const Icon(Icons.auto_graph_rounded, color: AppColors.aqua400),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: _HeroStat(
+                  label: 'Revenue',
+                  value: AppFormatters.currency(metrics.todayRevenue),
+                  trendUp: true,
+                ),
+              ),
+              Container(
+                width: 1, 
+                height: 40, 
+                color: AppColors.borderHairline,
+                margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              ),
+              Expanded(
+                child: _HeroStat(
+                  label: 'Orders',
+                  value: metrics.ordersToday.toString(),
+                  trendUp: true,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: _HeroStat(
+                  label: 'Pending',
+                  value: AppFormatters.currency(metrics.pendingPayments),
+                  trendUp: false,
+                  color: AppColors.warning,
+                ),
+              ),
+              Container(
+                width: 1, 
+                height: 40, 
+                color: AppColors.borderHairline,
+                margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              ),
+              Expanded(
+                child: _HeroStat(
+                  label: 'Active Deliveries',
+                  value: metrics.busyVehicles.toString(),
+                  trendUp: null,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroStat extends StatelessWidget {
+  const _HeroStat({
+    required this.label, 
+    required this.value, 
+    this.trendUp,
+    this.color,
+  });
+
+  final String label;
+  final String value;
+  final bool? trendUp;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label, 
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.ink500,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xxs),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Expanded(
+              child: Text(
+                value,
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: color ?? (Theme.of(context).brightness == Brightness.dark ? Colors.white : AppColors.ink900),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            DashboardCard(
-              title: "Today's Expenses",
-              value: AppFormatters.currency(metrics.todayExpenses),
-              subtitle: 'Expense date today',
-              icon: Icons.receipt_long_outlined,
-            ),
-            DashboardCard(
-              title: "Today's Profit",
-              value: AppFormatters.currency(metrics.todayProfit),
-              subtitle: 'Revenue - expenses',
-              icon: Icons.trending_up_rounded,
-            ),
-            DashboardCard(
-              title: 'Pending Payments',
-              value: AppFormatters.currency(metrics.pendingPayments),
-              subtitle: 'Amount due',
-              icon: Icons.pending_actions_rounded,
-            ),
-            DashboardCard(
-              title: 'Today Orders',
-              value: metrics.ordersToday.toString(),
-              subtitle: 'Orders entered today',
-              icon: Icons.water_drop_outlined,
-            ),
-            DashboardCard(
-              title: 'Available Vehicles',
-              value: metrics.availableVehicles.toString(),
-              subtitle: 'Ready for delivery',
-              icon: Icons.local_shipping_outlined,
-            ),
-            DashboardCard(
-              title: 'Busy Vehicles',
-              value: metrics.busyVehicles.toString(),
-              subtitle: 'Currently busy',
-              icon: Icons.route_outlined,
-            ),
+            if (trendUp != null) ...[
+              const SizedBox(width: AppSpacing.xxs),
+              Icon(
+                trendUp! ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                size: 16,
+                color: trendUp! ? AppColors.success : AppColors.danger,
+              ),
+            ],
           ],
-        );
-      },
+        ),
+      ],
     );
   }
 }

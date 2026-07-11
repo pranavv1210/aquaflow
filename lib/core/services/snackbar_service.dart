@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_elevation.dart';
-import '../theme/app_glass.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 
@@ -101,6 +100,8 @@ class _PremiumToastState extends State<_PremiumToast>
   @override
   Widget build(BuildContext context) {
     final spec = _specFor(widget.type);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Positioned(
       top: MediaQuery.of(context).padding.top + AppSpacing.sm,
       left: AppSpacing.md,
@@ -113,18 +114,24 @@ class _PremiumToastState extends State<_PremiumToast>
             child: Material(
               color: Colors.transparent,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.lg),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(
-                    sigmaX: AppGlass.heavyBlur,
-                    sigmaY: AppGlass.heavyBlur,
+                    sigmaX: 16,
+                    sigmaY: 16,
                   ),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.84),
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                      border: Border.all(color: Colors.white70),
-                      boxShadow: AppElevation.medium,
+                      color: (isDark ? AppColors.surfaceDark : AppColors.surfaceLight).withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      border: Border.all(color: Colors.white.withValues(alpha: isDark ? 0.05 : 0.4)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.ink900.withValues(alpha: 0.12),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -136,9 +143,7 @@ class _PremiumToastState extends State<_PremiumToast>
                           DecoratedBox(
                             decoration: BoxDecoration(
                               color: spec.color.withValues(alpha: 0.14),
-                              borderRadius: BorderRadius.circular(
-                                AppRadius.pill,
-                              ),
+                              shape: BoxShape.circle,
                             ),
                             child: Padding(
                               padding: const EdgeInsets.all(AppSpacing.xs),
@@ -173,19 +178,19 @@ class _PremiumToastState extends State<_PremiumToast>
   _ToastSpec _specFor(AppToastType type) {
     return switch (type) {
       AppToastType.success => const _ToastSpec(
-        color: AppColors.emeraldGreen,
+        color: AppColors.success,
         icon: Icons.check_circle_outline_rounded,
       ),
       AppToastType.error => const _ToastSpec(
-        color: AppColors.softRed,
+        color: AppColors.danger,
         icon: Icons.error_outline_rounded,
       ),
       AppToastType.warning => const _ToastSpec(
-        color: AppColors.amber,
+        color: AppColors.warning,
         icon: Icons.warning_amber_rounded,
       ),
       AppToastType.info => const _ToastSpec(
-        color: AppColors.deepOceanBlue,
+        color: AppColors.ocean600,
         icon: Icons.info_outline_rounded,
       ),
     };

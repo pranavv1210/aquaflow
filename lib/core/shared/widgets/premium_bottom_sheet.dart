@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../theme/app_design_tokens.dart';
+import '../../theme/app_colors.dart';
 import '../../theme/app_elevation.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
@@ -20,7 +20,7 @@ class PremiumBottomSheet extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.28),
+      barrierColor: AppColors.ink900.withValues(alpha: 0.4),
       builder:
           (BuildContext context) => PremiumBottomSheet(child: builder(context)),
     );
@@ -28,20 +28,32 @@ class PremiumBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(
         top: Radius.circular(AppRadius.xl),
       ),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: AppBlur.heavy, sigmaY: AppBlur.heavy),
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            gradient: AppGradients.glass(Theme.of(context).colorScheme.primary),
+            color: (isDark ? AppColors.surfaceDark : AppColors.surfaceLight).withValues(alpha: 0.85),
             borderRadius: const BorderRadius.vertical(
               top: Radius.circular(AppRadius.xl),
             ),
-            border: Border(top: AppBorders.glass()),
-            boxShadow: AppElevation.medium,
+            border: Border(
+              top: BorderSide(
+                color: Colors.white.withValues(alpha: isDark ? 0.05 : 0.4),
+              ),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.ink900.withValues(alpha: 0.15),
+                blurRadius: 40,
+                offset: const Offset(0, -10),
+              ),
+            ],
           ),
           child: SafeArea(
             top: false,
@@ -57,10 +69,8 @@ class PremiumBottomSheet extends StatelessWidget {
                 children: <Widget>[
                   DecoratedBox(
                     decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.18),
-                      borderRadius: AppBorders.pill,
+                      color: AppColors.ink500.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
                     ),
                     child: const SizedBox(width: 44, height: 4),
                   ),

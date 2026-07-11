@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_design_tokens.dart';
 import '../../theme/app_radius.dart';
+import '../../theme/app_colors.dart';
 
 class AppTextField extends StatelessWidget {
   const AppTextField({
@@ -33,6 +34,8 @@ class AppTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -42,27 +45,42 @@ class AppTextField extends StatelessWidget {
       validator: validator,
       readOnly: readOnly,
       onTap: onTap,
+      style: Theme.of(context).textTheme.bodyMedium,
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: AppColors.ink500,
+        ),
+        floatingLabelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: AppColors.ocean600,
+          fontWeight: FontWeight.w600,
+        ),
         hintText: hintText,
+        hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: AppColors.ink500,
+        ),
         contentPadding: AppPadding.field,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
           borderSide: BorderSide(
-            color: Theme.of(
-              context,
-            ).colorScheme.outline.withValues(alpha: 0.28),
+            color: isDark ? AppColors.borderHairlineDark : AppColors.borderHairline,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          borderSide: const BorderSide(color: AppColors.ocean600, width: 2),
         ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          borderSide: const BorderSide(color: AppColors.danger),
+        ),
+        filled: true,
+        fillColor: isDark ? AppColors.surfaceElevatedDark : AppColors.surfaceElevatedLight,
         prefixIcon:
-            prefixIcon == null ? null : Icon(prefixIcon, size: AppIconSizes.md),
+            prefixIcon == null ? null : Icon(prefixIcon, size: AppIconSizes.md, color: AppColors.ink500),
       ),
     );
   }

@@ -20,7 +20,7 @@ class StatusChip extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
+          vertical: 4,
         ),
         child: Text(
           label,
